@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Node
+node_modules/
+.next/
+dist/
+
+# Data / models
+data/
+datasets/
+models/
+*.pt
+*.onnx
+
+# OS
+.DS_Store
+
+# Logs
+*.log
