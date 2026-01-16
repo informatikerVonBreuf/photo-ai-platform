@@ -10,7 +10,7 @@ node_modules/
 dist/
 
 # Data / models
-data/
+data/images/val2017
 datasets/
 models/
 *.pt
