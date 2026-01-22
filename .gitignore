@@ -12,7 +12,7 @@ dist/
 # Data / models
 data/images/val2017
 datasets/
-models/
+models/antelopev2/
 *.pt
 *.onnx
 
@@ -21,3 +21,5 @@ models/
 
 # Logs
 *.log
+
+*.vscode/

@@ -1,0 +1,8 @@
+insightface
+onnxruntime
+pandas
+faiss-cpu
+qdrant-client
+fastapi
+uvicorn
+python-multipart
