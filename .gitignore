@@ -21,3 +21,6 @@ models/
 
 # Logs
 *.log
+
+# infra 
+infra/.env.docker
