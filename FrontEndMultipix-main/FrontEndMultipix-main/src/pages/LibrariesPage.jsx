@@ -2,6 +2,7 @@ import { useState } from "react";
 import RatingStars from "../ui/RatingStars";
 import HistoryPanel from "../ui/HistoryPanel";
 import useToast from "../hooks/useToast";
+import FieldError from "../ui/FieldError";
 
 export default function LibrariesPage() {
   const { toasts, addToast, ToastContainer } = useToast();
@@ -12,9 +13,14 @@ export default function LibrariesPage() {
 
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
+  const [errors, setErrors] = useState({ name: "", desc: "" });
 
   function addLibrary() {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setErrors({ name: "Le nom est obligatoire", desc: "" });
+      return;
+    }
+    setErrors({ name: "", desc: "" });
     setLibraries([{ id: crypto.randomUUID(), name, desc }, ...libraries]);
     setName("");
     setDesc("");
@@ -34,7 +40,8 @@ export default function LibrariesPage() {
 
           <label className="field">
             Nom
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex: Mariages 2025" />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex: Mariages 2025" className={errors.name ? "error" : ""} />
+            <FieldError message={errors.name} />
           </label>
           <label className="field">
             Description
