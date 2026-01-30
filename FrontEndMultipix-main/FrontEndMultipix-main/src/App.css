@@ -198,6 +198,51 @@ input:focus,select:focus{
 }
 .btn.ghost{ background: transparent; }
 
+/* Skeleton loaders */
+.skeleton {
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeletonImg {
+  aspect-ratio: 4/3;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeletonLine {
+  height: 12px;
+  margin-bottom: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeletonLine.short {
+  width: 60%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* Layout page grid */
 .pageGrid{
   display:grid;
@@ -419,4 +464,151 @@ input:focus,select:focus{
   .clusterGrid{ grid-template-columns: 1fr; }
   .libGrid{ grid-template-columns: 1fr; }
   .grid2{ grid-template-columns: 1fr; }
+}
+
+/* Loading spinner */
+.loadingBox{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  padding:48px 24px;
+}
+.spinner{
+  width:48px;
+  height:48px;
+  border-radius:999px;
+  border:3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
+}
+.loadingText{
+  font-size:14px;
+  font-weight:500;
+  color: var(--muted);
+}
+
+/* Mini spinner pour boutons */
+.btnSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* État désactivé des boutons */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn.primary:disabled {
+  opacity: 0.6;
+}
+/* Toast notifications */
+.toastContainer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 300px;
+  max-width: 400px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+  pointer-events: all;
+  color: var(--text);
+}
+
+.toast-success {
+  border-color: rgba(134, 194, 50, 0.4);
+  background: linear-gradient(135deg, 
+    rgba(134, 194, 50, 0.15), 
+    rgba(0, 0, 0, 0.9)
+  );
+}
+
+.toast-error {
+  border-color: rgba(188, 70, 57, 0.4);
+  background: linear-gradient(135deg, 
+    rgba(188, 70, 57, 0.15), 
+    rgba(0, 0, 0, 0.9)
+  );
+}
+
+.toast-warning {
+  border-color: rgba(250, 237, 38, 0.4);
+  background: linear-gradient(135deg, 
+    rgba(250, 237, 38, 0.15), 
+    rgba(0, 0, 0, 0.9)
+  );
+}
+
+.toastIcon {
+  font-size: 18px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.toastMessage {
+  flex: 1;
+  font-size: 14px;
+}
+
+.toastClose {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toastClose:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

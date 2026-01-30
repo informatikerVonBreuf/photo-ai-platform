@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
+import LoadingSpinner from "../ui/LoadingSpinner";
+import SkeletonCard from "../ui/SkeletonCard";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -69,7 +71,16 @@ export default function TextSearchPage() {
           </label>
 
           <button className="btn primary" disabled={!canRun || loading} onClick={run}>
-            {loading ? "Recherche..." : "Lancer la recherche"}
+            {loading ? (
+              <>
+                <span className="btnSpinner" />
+                Recherche...
+              </>
+            ) : (
+              <>
+                🔍 Lancer la recherche
+              </>
+            )}
           </button>
         </div>
 
@@ -101,20 +112,22 @@ export default function TextSearchPage() {
           </div>
 
           <div className="gallery">
-            {results.map((r) => (
-              <div className="tile" key={r.id}>
-                <div className="tileImg">
-                  <img src={r.url} alt={r.caption} />
+            {loading ? (
+              <SkeletonCard count={8} />
+            ) : (
+              results.map((r) => (
+                <div className="tile" key={r.id}>
+                  <div className="tileImg">
+                    <img src={r.url} alt={r.caption} />
+                  </div>
+                  <div className="tileMeta">
+                    <div className="tileCap">{r.caption}</div>
+                    <div className="tileSub">score: {r.score}</div>
+                  </div>
                 </div>
-                <div className="tileMeta">
-                  <div className="tileCap">{r.caption}</div>
-                  <div className="tileSub">score: {r.score}</div>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-
-          {loading && <div className="muted">Chargement…</div>}
         </div>
       </div>
     </div>

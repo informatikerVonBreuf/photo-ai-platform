@@ -1,8 +1,10 @@
 import { useState } from "react";
 import RatingStars from "../ui/RatingStars";
 import HistoryPanel from "../ui/HistoryPanel";
+import useToast from "../hooks/useToast";
 
 export default function LibrariesPage() {
+  const { toasts, addToast, ToastContainer } = useToast();
   const [libraries, setLibraries] = useState([
     { id: "lib1", name: "Mariages 2024", desc: "Clients & cérémonies" },
     { id: "lib2", name: "Portraits Studio", desc: "Portraits pro" },
@@ -16,6 +18,7 @@ export default function LibrariesPage() {
     setLibraries([{ id: crypto.randomUUID(), name, desc }, ...libraries]);
     setName("");
     setDesc("");
+    addToast(`Bibliothèque "${name}" créée avec succès`, "success");
   }
 
   return (
@@ -68,6 +71,7 @@ export default function LibrariesPage() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }
