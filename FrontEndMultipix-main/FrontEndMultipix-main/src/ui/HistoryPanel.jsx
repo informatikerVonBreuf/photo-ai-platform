@@ -1,3 +1,5 @@
+import EmptyState from "./EmptyState";
+
 export default function HistoryPanel({ title = "Historique", items = [] }) {
   return (
     <div className="card">
@@ -9,7 +11,11 @@ export default function HistoryPanel({ title = "Historique", items = [] }) {
       </div>
 
       {items.length === 0 ? (
-        <div className="muted">Aucun historique pour l’instant.</div>
+        <EmptyState
+          icon="📜"
+          title="Aucun historique"
+          message="Vos recherches récentes apparaîtront ici."
+        />
       ) : (
         <div className="historyList">
           {items.map((it) => (

@@ -21,10 +21,15 @@ export default function LibrariesPage() {
       return;
     }
     setErrors({ name: "", desc: "" });
-    setLibraries([{ id: crypto.randomUUID(), name, desc }, ...libraries]);
-    setName("");
-    setDesc("");
-    addToast(`Bibliothèque "${name}" créée avec succès`, "success");
+    
+    try {
+      setLibraries([{ id: crypto.randomUUID(), name, desc }, ...libraries]);
+      setName("");
+      setDesc("");
+      addToast(`Bibliothèque "${name}" créée avec succès`, "success");
+    } catch (err) {
+      addToast("Erreur lors de la création de la bibliothèque", "error");
+    }
   }
 
   return (

@@ -627,6 +627,78 @@ input.error:focus, select.error:focus {
   box-shadow: 0 0 0 4px rgba(188, 70, 57, 0.2);
 }
 
+/* Empty states */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.emptyMessage {
+  font-size: 14px;
+  max-width: 400px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.emptyState .btn {
+  margin-top: 8px;
+}
+
+/* Error states */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+.errorIcon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.errorTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #BC4639;
+  margin-bottom: 8px;
+}
+
+.errorMessage {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 400px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.errorState .btn {
+  margin-top: 8px;
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(400px);

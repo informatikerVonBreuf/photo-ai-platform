@@ -2,6 +2,8 @@ import { useState } from "react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
+import SkeletonCard from "../ui/SkeletonCard";
+import EmptyState from "../ui/EmptyState";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -28,6 +30,7 @@ export default function FiltersPage() {
   const [maxH, setMaxH] = useState("");
 
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   function addTag() {
     const t = tagDraft.trim();
@@ -38,9 +41,12 @@ export default function FiltersPage() {
 
   async function run() {
     // TODO: appeler /filters avec scope + filtres
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 600));
     setResults([
       { id: "p1", url: "https://picsum.photos/600/400?20", caption: "Filtré", score: 1 },
     ]);
+    setLoading(false);
   }
 
   return (
@@ -124,14 +130,24 @@ export default function FiltersPage() {
           </div>
 
           <div className="gallery">
-            {results.map((r) => (
-              <div className="tile" key={r.id}>
-                <div className="tileImg"><img src={r.url} alt={r.caption} /></div>
-                <div className="tileMeta">
-                  <div className="tileCap">{r.caption}</div>
+            {loading ? (
+              <SkeletonCard count={8} />
+            ) : results.length === 0 ? (
+              <EmptyState
+                icon="🎛️"
+                title="Aucun résultat"
+                message="Ajustez vos filtres pour affiner votre recherche."
+              />
+            ) : (
+              results.map((r) => (
+                <div className="tile" key={r.id}>
+                  <div className="tileImg"><img src={r.url} alt={r.caption} /></div>
+                  <div className="tileMeta">
+                    <div className="tileCap">{r.caption}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

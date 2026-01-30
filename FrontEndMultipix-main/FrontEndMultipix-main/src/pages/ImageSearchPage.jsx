@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
+import SkeletonCard from "../ui/SkeletonCard";
+import EmptyState from "../ui/EmptyState";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -124,20 +126,28 @@ export default function ImageSearchPage() {
           </div>
 
           <div className="gallery">
-            {results.map((r) => (
-              <div className="tile" key={r.id}>
-                <div className="tileImg">
-                  <img src={r.url} alt={r.caption} />
+            {loading ? (
+              <SkeletonCard count={8} />
+            ) : results.length === 0 ? (
+              <EmptyState
+                icon="🔍"
+                title="Aucun résultat"
+                message="Essayez avec d'autres images ou ajustez votre sélection de bibliothèque."
+              />
+            ) : (
+              results.map((r) => (
+                <div className="tile" key={r.id}>
+                  <div className="tileImg">
+                    <img src={r.url} alt={r.caption} />
+                  </div>
+                  <div className="tileMeta">
+                    <div className="tileCap">{r.caption}</div>
+                    <div className="tileSub">score: {r.score}</div>
+                  </div>
                 </div>
-                <div className="tileMeta">
-                  <div className="tileCap">{r.caption}</div>
-                  <div className="tileSub">score: {r.score}</div>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-
-          {loading && <div className="muted">Chargement…</div>}
         </div>
       </div>
     </div>
