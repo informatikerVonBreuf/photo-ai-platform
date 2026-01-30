@@ -3,6 +3,7 @@ import RatingStars from "../ui/RatingStars";
 import HistoryPanel from "../ui/HistoryPanel";
 import useToast from "../hooks/useToast";
 import FieldError from "../ui/FieldError";
+import Tooltip from "../ui/Tooltip";
 
 export default function LibrariesPage() {
   const { toasts, addToast, ToastContainer } = useToast();
@@ -40,41 +41,66 @@ export default function LibrariesPage() {
 
   return (
     <div className="pageGrid">
+      {/* Welcome section en fullRow */}
+      <div className="fullRow">
+        <div className="welcome">
+          <Tooltip text="Crée et organise les bibliothèques, shootings et photos" position="right">
+            <div className="welcomeTitle">Bibliothèques</div>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Left column */}
       <div className="leftCol">
         <div className="card">
           <div className="cardHeader">
-            <div>
-              <div className="cardTitle">Créer une library</div>
-              <div className="cardSub">Organise tes shootings par library.</div>
-            </div>
+            <Tooltip text="Organise tes shootings par bibliothèque(s)" position="right">
+              <div className="cardTitle">Créer une bibliothèque</div>
+            </Tooltip>
           </div>
 
           <label className="field">
             Nom
-            <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} placeholder="ex: Mariages 2025" className={errors.name ? "error" : ""} />
+            <input 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              onKeyDown={handleKeyDown} 
+              placeholder="ex: Mariages 2025" 
+              className={errors.name ? "error" : ""} 
+            />
             <FieldError message={errors.name} />
           </label>
+
           <label className="field">
             Description
-            <input value={desc} onChange={(e) => setDesc(e.target.value)} onKeyDown={handleKeyDown} placeholder="ex: clients, cérémonies, soirées..." />
+            <input 
+              value={desc} 
+              onChange={(e) => setDesc(e.target.value)} 
+              onKeyDown={handleKeyDown} 
+              placeholder="ex: clients, cérémonies, soirées..." 
+            />
           </label>
 
-          <button className="btn primary" onClick={addLibrary}>Créer</button>
+          <Tooltip text="Créer une nouvelle bibliothèque" position="top">
+            <button className="btn primary" onClick={addLibrary}>
+              Créer
+            </button>
+          </Tooltip>
         </div>
-
-        <RatingStars label="Appréciation — Bibliothèques" onRate={(v) => console.log("rate libraries", v)} />
       </div>
 
+      {/* Right column */}
       <div className="rightCol">
         <HistoryPanel title="Historique — Bibliothèques" items={[]} />
       </div>
 
+      {/* Mes bibliothèques */}
       <div className="fullRow">
         <div className="card">
           <div className="cardHeader">
             <div>
-              <div className="cardTitle">Mes libraries</div>
-              <div className="cardSub">{libraries.length} library(s)</div>
+              <div className="cardTitle">Mes bibliothèques</div>
+              <div className="cardSub">{libraries.length} bibliothèque(s)</div>
             </div>
           </div>
 
@@ -89,6 +115,15 @@ export default function LibrariesPage() {
           </div>
         </div>
       </div>
+
+      {/* Rating section en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Bibliothèques"
+          onRate={(v) => console.log("rate libraries", v)} 
+        />
+      </div>
+
       <ToastContainer />
     </div>
   );

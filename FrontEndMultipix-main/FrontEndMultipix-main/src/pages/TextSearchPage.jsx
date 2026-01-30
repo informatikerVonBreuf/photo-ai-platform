@@ -2,10 +2,10 @@ import { useMemo, useState } from "react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
-import LoadingSpinner from "../ui/LoadingSpinner";
 import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
+import Tooltip from "../ui/Tooltip";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -63,6 +63,14 @@ export default function TextSearchPage() {
 
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+        <div className="welcome">
+          <Tooltip text="Décris ce que tu cherches, puis sélectionne une bibliothèque et ses shootings pour lancer la recherche" position="right">
+            <div className="welcomeTitle">Recherche par texte</div>
+          </Tooltip>
+        </div>
+      </div>
+
       <div className="leftCol">
         <ScopePicker
           libraries={MOCK_LIBRARIES}
@@ -74,15 +82,9 @@ export default function TextSearchPage() {
         />
 
         <div className="card">
-          <div className="cardHeader">
-            <div>
-              <div className="cardTitle">Votre requête</div>
-              <div className="cardSub">Décris ce que tu veux trouver (ex: “photos de groupe”).</div>
-            </div>
-          </div>
 
           <label className="field">
-            Requête texte
+            <div style={{ fontStyle: "italic" }}>Décris ce que tu cherches </div>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -104,11 +106,6 @@ export default function TextSearchPage() {
             )}
           </button>
         </div>
-
-        <RatingStars
-          label="Appréciation — Recherche texte"
-          onRate={(v) => console.log("rate text search", v)}
-        />
       </div>
 
       <div className="rightCol">
@@ -119,12 +116,19 @@ export default function TextSearchPage() {
       </div>
 
       <div className="fullRow">
+        <RatingStars 
+          featureName="Recherche texte"
+          onRate={(v) => console.log("rate text search", v)} 
+        />
+      </div>
+
+      <div className="fullRow">
         <div className="card">
           <div className="cardHeader">
             <div>
               <div className="cardTitle">Résultats</div>
               <div className="cardSub">
-                {results.length ? `${results.length} photo(s)` : "Aucun résultat"}
+                {results.length ? `${results.length} photo(s)` : ""}
               </div>
             </div>
             <button className="btn" disabled={!results.length}>
@@ -145,7 +149,7 @@ export default function TextSearchPage() {
               <EmptyState
                 icon="🔍"
                 title="Aucun résultat"
-                message="Essayez une autre requête ou ajustez votre sélection de bibliothèque."
+                tooltip="Essayez une autre requête ou ajustez votre sélection de bibliothèque"
               />
             ) : (
               results.map((r) => (

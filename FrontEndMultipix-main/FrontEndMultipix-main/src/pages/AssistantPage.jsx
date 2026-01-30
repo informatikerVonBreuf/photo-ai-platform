@@ -1,8 +1,17 @@
 import RatingStars from "../ui/RatingStars";
+import Tooltip from "../ui/Tooltip";
+
 
 export default function AssistantPage() {
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+                          <div className="welcome">
+                            <Tooltip text=" Pose une question (ex: “résume ce shooting”, “propose une sélection”)." position="right">
+                              <div className="welcomeTitle">Assistant IA</div>
+                            </Tooltip>
+                          </div>
+                        </div>
       <div className="leftCol">
         <div className="card">
           <div className="cardHeader">
@@ -21,7 +30,10 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        <RatingStars label="Appréciation — Assistant" onRate={(v) => console.log("rate assistant", v)} />
+        <RatingStars 
+          featureName="Assistant"
+          onRate={(v) => console.log("rate assistant", v)}
+        />
       </div>
 
       <div className="rightCol">

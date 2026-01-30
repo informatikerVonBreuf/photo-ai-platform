@@ -4,6 +4,7 @@ import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
+import Tooltip from "../ui/Tooltip";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -67,6 +68,13 @@ export default function ClusteringPage() {
 
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+                    <div className="welcome">
+                      <Tooltip text="Regroupe automatiquement tes photos par thème. Tu verras le résultat en cartes + galerie." position="right">
+                        <div className="welcomeTitle">Clustering</div>
+                      </Tooltip>
+                    </div>
+                  </div>
       <div className="leftCol">
         <ScopePicker
           libraries={MOCK_LIBRARIES}
@@ -80,8 +88,9 @@ export default function ClusteringPage() {
         <div className="card">
           <div className="cardHeader">
             <div>
+              <Tooltip text="Les clusters (thèmes et galeries) s'afficheront après le lancement" position="right">
               <div className="cardTitle">Lancer un clustering</div>
-              <div className="cardSub">Tu verras les clusters (thème + galerie) juste après.</div>
+              </Tooltip>
             </div>
           </div>
 
@@ -90,7 +99,10 @@ export default function ClusteringPage() {
           </button>
         </div>
 
-        <RatingStars label="Appréciation — Clustering" onRate={(v) => console.log("rate clustering", v)} />
+        <RatingStars 
+          featureName="Clustering"
+          onRate={(v) => console.log("rate clustering", v)}
+        />
       </div>
 
       <div className="rightCol">
@@ -102,7 +114,7 @@ export default function ClusteringPage() {
           <div className="cardHeader">
             <div>
               <div className="cardTitle">Clusters</div>
-              <div className="cardSub">{clusters.length ? `${clusters.length} cluster(s)` : "Aucun clustering lancé."}</div>
+              <div className="cardSub">{clusters.length ? `${clusters.length} cluster(s)` : ""}</div>
             </div>
           </div>
 
@@ -118,7 +130,7 @@ export default function ClusteringPage() {
               <EmptyState
                 icon="🧩"
                 title="Aucun cluster"
-                message="Lancez une analyse pour regrouper automatiquement vos photos par thème."
+                tooltip="Lancez une analyse pour regrouper automatiquement vos photos par thème."
               />
             ) : (
               clusters.map((cluster) => (

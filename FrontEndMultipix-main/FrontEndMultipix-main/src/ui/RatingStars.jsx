@@ -1,38 +1,38 @@
 import { useState } from "react";
+import Tooltip from "./Tooltip";
 
-export default function RatingStars({ label = "Votre avis", onRate }) {
-  const [value, setValue] = useState(0);
+export default function RatingStars({ featureName, onRate }) {
+  const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
 
-  function commit(v) {
-    setValue(v);
-    onRate?.(v);
-  }
+  const handleClick = (value) => {
+    setRating(value);
+    if (onRate) onRate(value);
+  };
 
   return (
-    <div className="card">
-      <div className="cardHeader">
-        <div>
-          <div className="cardTitle">{label}</div>
-          <div className="cardSub">Note cette fonctionnalité (feedback utilisateur).</div>
-        </div>
-      </div>
-
+    <div className="card" style={{ textAlign: "center", padding: "16px" }}>
       <div className="stars">
-        {[1,2,3,4,5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            className={`star ${((hover || value) >= n) ? "on" : ""}`}
-            onMouseEnter={() => setHover(n)}
-            onMouseLeave={() => setHover(0)}
-            onClick={() => commit(n)}
-            aria-label={`${n} étoiles`}
-          >
-            ★
-          </button>
-        ))}
-        <span className="mutedSmall">{value ? `${value}/5` : "—"}</span>
+        {[1, 2, 3, 4, 5].map((value) => {
+          const isActive = value <= (hover || rating);
+          
+          return (
+            <Tooltip 
+              key={value} 
+              text={`Fonctionnalité ${featureName} notée ${value}/5`}
+              position="top"
+            >
+              <button
+                className={`star ${isActive ? "on" : ""}`}
+                onClick={() => handleClick(value)}
+                onMouseEnter={() => setHover(value)}
+                onMouseLeave={() => setHover(0)}
+              >
+                ★
+              </button>
+            </Tooltip>
+          );
+        })}
       </div>
     </div>
   );

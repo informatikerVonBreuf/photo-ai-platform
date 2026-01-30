@@ -5,6 +5,7 @@ import RatingStars from "../ui/RatingStars";
 import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
+import Tooltip from "../ui/Tooltip";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -27,6 +28,12 @@ export default function ImageSearchPage() {
   const [error, setError] = useState(null);
 
   const canRun = useMemo(() => Boolean(libraryId) && refFiles.length > 0, [libraryId, refFiles]);
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && canRun && !loading) {
+      run();
+    }
+  }
 
   async function run() {
     if (!canRun) return;
@@ -55,6 +62,13 @@ export default function ImageSearchPage() {
 
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+              <div className="welcome">
+                <Tooltip text="Choisis des images de référence (visage / scène), sélectionne le scope, puis lance la recherche." position="right">
+                  <div className="welcomeTitle">Recherche par image</div>
+                </Tooltip>
+              </div>
+            </div>
       <div className="leftCol">
         <ScopePicker
           libraries={MOCK_LIBRARIES}
@@ -67,20 +81,18 @@ export default function ImageSearchPage() {
 
         <div className="card">
           <div className="cardHeader">
-            <div>
+            <Tooltip text="Choisis une ou plusieurs images (ex: un visage par image)." position="right">
               <div className="cardTitle">Images de référence</div>
-              <div className="cardSub">
-                Choisis une ou plusieurs images (ex: un visage par image).
-              </div>
-            </div>
+            </Tooltip>
           </div>
 
-          <label className="field">
+          <label className="field italic">
             Importer depuis ton PC
             <input
               type="file"
               accept="image/*"
               multiple
+              onKeyDown={handleKeyDown}
               onChange={(e) => setRefFiles(Array.from(e.target.files || []))}
             />
           </label>
@@ -88,35 +100,43 @@ export default function ImageSearchPage() {
           <div className="toggleRow">
             <div className="toggleLabel">Logique</div>
             <div className="toggle">
-              <button
-                type="button"
-                className={`toggleBtn ${logic === "intersection" ? "on" : ""}`}
-                onClick={() => setLogic("intersection")}
-              >
-                Intersection
-              </button>
-              <button
-                type="button"
-                className={`toggleBtn ${logic === "union" ? "on" : ""}`}
-                onClick={() => setLogic("union")}
-              >
-                Union
-              </button>
+              <Tooltip text="Images avec toutes les images de référence" position="top">
+                <span style={{ display: "contents" }}>
+                  <button
+                    type="button"
+                    className={`toggleBtn ${logic === "intersection" ? "on" : ""}`}
+                    onClick={() => setLogic("intersection")}
+                  >
+                    Intersection
+                  </button>
+                </span>
+              </Tooltip>
+              <Tooltip text="Images avec n'importe quelle image de référence" position="top">
+                <span style={{ display: "contents" }}>
+                  <button
+                    type="button"
+                    className={`toggleBtn ${logic === "union" ? "on" : ""}`}
+                    onClick={() => setLogic("union")}
+                  >
+                    Union
+                  </button>
+                </span>
+              </Tooltip>
             </div>
           </div>
 
           <button className="btn primary" disabled={!canRun || loading} onClick={run}>
             {loading ? "Recherche..." : "Lancer la recherche"}
           </button>
-
+          
           <div className="mutedSmall">
             (Prochain step) Ajouter un sélecteur “Choisir une photo depuis la library”.
           </div>
         </div>
 
-        <RatingStars
-          label="Appréciation — Recherche image"
-          onRate={(v) => console.log("rate image search", v)}
+        <RatingStars 
+          featureName="Recherche image"
+          onRate={(v) => console.log("rate image search", v)} 
         />
       </div>
 
@@ -151,7 +171,7 @@ export default function ImageSearchPage() {
               <EmptyState
                 icon="🔍"
                 title="Aucun résultat"
-                message="Essayez avec d'autres images ou ajustez votre sélection de bibliothèque."
+                tooltip="Essayez avec d'autres images ou ajustez votre sélection de bibliothèque."
               />
             ) : (
               results.map((r) => (

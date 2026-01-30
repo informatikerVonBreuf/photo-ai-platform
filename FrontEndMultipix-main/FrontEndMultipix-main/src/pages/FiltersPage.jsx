@@ -5,6 +5,7 @@ import RatingStars from "../ui/RatingStars";
 import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
+import Tooltip from "../ui/Tooltip";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -73,6 +74,13 @@ export default function FiltersPage() {
 
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+                    <div className="welcome">
+                      <Tooltip text="Filtre les photos sur ta bibliotèque et/ou de ses shootings" position="right">
+                        <div className="welcomeTitle">Filtres</div>
+                      </Tooltip>
+                    </div>
+                  </div>
       <div className="leftCol">
         <ScopePicker
           libraries={MOCK_LIBRARIES}
@@ -86,8 +94,9 @@ export default function FiltersPage() {
         <div className="card">
           <div className="cardHeader">
             <div>
+              <Tooltip text="Ajoute des tags pour affiner." position="right">
               <div className="cardTitle">Tags</div>
-              <div className="cardSub">Ajoute des tags pour affiner.</div>
+              </Tooltip>
             </div>
           </div>
 
@@ -114,8 +123,9 @@ export default function FiltersPage() {
         <div className="card">
           <div className="cardHeader">
             <div>
+              <Tooltip text="Dates, orientations, dimensions" position="right">
               <div className="cardTitle">Filtres</div>
-              <div className="cardSub">Dates, orientation, dimensions.</div>
+              </Tooltip>
             </div>
           </div>
 
@@ -140,7 +150,10 @@ export default function FiltersPage() {
           <button className="btn primary" onClick={run}>Appliquer</button>
         </div>
 
-        <RatingStars label="Appréciation — Filtres" onRate={(v) => console.log("rate filters", v)} />
+        <RatingStars 
+          featureName="Filtres"
+          onRate={(v) => console.log("rate filters", v)}
+        />
       </div>
 
       <div className="rightCol">
@@ -152,7 +165,7 @@ export default function FiltersPage() {
           <div className="cardHeader">
             <div>
               <div className="cardTitle">Résultats</div>
-              <div className="cardSub">{results.length ? `${results.length} photo(s)` : "Aucun résultat"}</div>
+              <div className="cardSub">{results.length ? `${results.length} photo(s)` : ""}</div>
             </div>
           </div>
 
@@ -165,7 +178,7 @@ export default function FiltersPage() {
               <EmptyState
                 icon="🎛️"
                 title="Aucun résultat"
-                message="Ajustez vos filtres pour affiner votre recherche."
+                tooltip="Ajustez vos filtres pour affiner votre recherche."
               />
             ) : (
               results.map((r) => (
