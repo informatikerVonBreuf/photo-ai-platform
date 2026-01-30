@@ -1,8 +1,6 @@
-insightface
-onnxruntime
-pandas
-faiss-cpu
-qdrant-client
+pandas 
+opencv-python
+scikit-learn
 fastapi
 uvicorn
-python-multipart
+qdrant-client

@@ -1,7 +1,7 @@
 from typing import Dict
 from .filter_by_image import FilterByImage
 
-from ..client import client, app
+from ..client import client
 
 class FolderManager:
     """Manage multiple FilterByImage instance"""
@@ -10,7 +10,6 @@ class FolderManager:
         """Initialize the folder manager with an empty folder dictionary"""
         self._folders: Dict[str, FilterByImage] = {}
         self._client = client
-        self._app = app
     
     def create_folder(self, folder_name: str, images_path: str):
         """
