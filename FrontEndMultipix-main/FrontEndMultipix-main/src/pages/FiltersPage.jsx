@@ -4,6 +4,7 @@ import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
 import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
+import ErrorState from "../ui/ErrorState";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -31,6 +32,7 @@ export default function FiltersPage() {
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   function addTag() {
     const t = tagDraft.trim();
@@ -39,14 +41,34 @@ export default function FiltersPage() {
     setTagDraft("");
   }
 
+  function handleKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  }
+
   async function run() {
     // TODO: appeler /filters avec scope + filtres
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setResults([
-      { id: "p1", url: "https://picsum.photos/600/400?20", caption: "Filtré", score: 1 },
-    ]);
-    setLoading(false);
+    setError(null);
+
+    try {
+      // Simulation d'erreur aléatoire (1 chance sur 3)
+      if (Math.random() < 0.33) {
+        throw new Error("Erreur de connexion au serveur");
+      }
+
+      await new Promise((r) => setTimeout(r, 600));
+      setResults([
+        { id: "p1", url: "https://picsum.photos/600/400?20", caption: "Filtré", score: 1 },
+      ]);
+    } catch (err) {
+      setError(err.message || "Erreur inconnue");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -70,7 +92,12 @@ export default function FiltersPage() {
           </div>
 
           <div className="row">
-            <input value={tagDraft} onChange={(e) => setTagDraft(e.target.value)} placeholder="ex: mariage" />
+            <input
+              value={tagDraft}
+              onChange={(e) => setTagDraft(e.target.value)}
+              placeholder="ex: portrait, mariage..."
+              onKeyDown={handleKeyDown}
+            />
             <button className="btn" onClick={addTag}>Ajouter</button>
           </div>
 
@@ -132,6 +159,8 @@ export default function FiltersPage() {
           <div className="gallery">
             {loading ? (
               <SkeletonCard count={8} />
+            ) : error ? (
+              <ErrorState title="Erreur de recherche" message={error} onRetry={run} />
             ) : results.length === 0 ? (
               <EmptyState
                 icon="🎛️"

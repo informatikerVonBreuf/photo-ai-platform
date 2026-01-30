@@ -4,6 +4,7 @@ import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
 import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
+import ErrorState from "../ui/ErrorState";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -23,21 +24,33 @@ export default function ImageSearchPage() {
   const [logic, setLogic] = useState("intersection"); // intersection | union
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
 
   const canRun = useMemo(() => Boolean(libraryId) && refFiles.length > 0, [libraryId, refFiles]);
 
   async function run() {
     if (!canRun) return;
     setLoading(true);
+    setError(null);
 
-    // TODO: ton endpoint /search-image
-    await new Promise((r) => setTimeout(r, 600));
-    setResults([
-      { id: "p1", url: "https://picsum.photos/600/400?7", caption: "Portrait", score: 0.93 },
-      { id: "p2", url: "https://picsum.photos/600/400?8", caption: "Portrait 2", score: 0.88 },
-    ]);
+    try {
+      // Simulation d'erreur aléatoire (1 chance sur 3)
+      if (Math.random() < 0.33) {
+        throw new Error("Erreur de connexion au serveur");
+      }
 
-    setLoading(false);
+      // TODO: ton endpoint /search-image
+      await new Promise((r) => setTimeout(r, 600));
+      setResults([
+        { id: "p1", url: "https://picsum.photos/600/400?7", caption: "Portrait", score: 0.93 },
+        { id: "p2", url: "https://picsum.photos/600/400?8", caption: "Portrait 2", score: 0.88 },
+      ]);
+    } catch (err) {
+      setError(err.message || "Erreur inconnue");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -128,6 +141,12 @@ export default function ImageSearchPage() {
           <div className="gallery">
             {loading ? (
               <SkeletonCard count={8} />
+            ) : error ? (
+              <ErrorState
+                title="Erreur de recherche"
+                message={error}
+                onRetry={run}
+              />
             ) : results.length === 0 ? (
               <EmptyState
                 icon="🔍"

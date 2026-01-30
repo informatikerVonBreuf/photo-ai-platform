@@ -15,6 +15,12 @@ export default function LibrariesPage() {
   const [desc, setDesc] = useState("");
   const [errors, setErrors] = useState({ name: "", desc: "" });
 
+  function handleKeyDown(e) {
+    if (e.key === "Enter") {
+      addLibrary();
+    }
+  }
+
   function addLibrary() {
     if (!name.trim()) {
       setErrors({ name: "Le nom est obligatoire", desc: "" });
@@ -45,12 +51,12 @@ export default function LibrariesPage() {
 
           <label className="field">
             Nom
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex: Mariages 2025" className={errors.name ? "error" : ""} />
+            <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} placeholder="ex: Mariages 2025" className={errors.name ? "error" : ""} />
             <FieldError message={errors.name} />
           </label>
           <label className="field">
             Description
-            <input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="ex: clients, cérémonies, soirées..." />
+            <input value={desc} onChange={(e) => setDesc(e.target.value)} onKeyDown={handleKeyDown} placeholder="ex: clients, cérémonies, soirées..." />
           </label>
 
           <button className="btn primary" onClick={addLibrary}>Créer</button>

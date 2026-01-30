@@ -28,6 +28,12 @@ export default function TextSearchPage() {
 
   const canRun = useMemo(() => Boolean(libraryId) && query.trim().length > 0, [libraryId, query]);
 
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && canRun && !loading) {
+      run();
+    }
+  }
+
   async function run() {
     if (!canRun) return;
     setLoading(true);
@@ -80,6 +86,7 @@ export default function TextSearchPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="ex: photos de groupe, cérémonie, danse…"
             />
           </label>
@@ -128,6 +135,12 @@ export default function TextSearchPage() {
           <div className="gallery">
             {loading ? (
               <SkeletonCard count={8} />
+            ) : error ? (
+              <ErrorState
+                title="Erreur de recherche"
+                message={error}
+                onRetry={run}
+              />
             ) : results.length === 0 ? (
               <EmptyState
                 icon="🔍"

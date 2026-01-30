@@ -3,6 +3,7 @@ import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
 import EmptyState from "../ui/EmptyState";
+import ErrorState from "../ui/ErrorState";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -20,34 +21,48 @@ export default function ClusteringPage() {
   const [selectedShootings, setSelectedShootings] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function run() {
     // TODO: /cluster
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setClusters([
-      {
-        id: "c1",
-        theme: "Cérémonie",
-        count: 12,
-        photos: [
-          { id: "p1", url: "https://picsum.photos/600/400?30", caption: "Cérémonie 1" },
-          { id: "p2", url: "https://picsum.photos/600/400?31", caption: "Cérémonie 2" },
-          { id: "p3", url: "https://picsum.photos/600/400?32", caption: "Cérémonie 3" },
-        ],
-      },
-      {
-        id: "c2",
-        theme: "Photos de groupe",
-        count: 20,
-        photos: [
-          { id: "p4", url: "https://picsum.photos/600/400?33", caption: "Groupe 1" },
-          { id: "p5", url: "https://picsum.photos/600/400?34", caption: "Groupe 2" },
-          { id: "p6", url: "https://picsum.photos/600/400?35", caption: "Groupe 3" },
-        ],
-      },
-    ]);
-    setLoading(false);
+    setError(null);
+
+    try {
+      // Simulation d'erreur aléatoire (1 chance sur 3)
+      if (Math.random() < 0.33) {
+        throw new Error("Erreur de connexion au serveur");
+      }
+
+      await new Promise((r) => setTimeout(r, 800));
+      setClusters([
+        {
+          id: "c1",
+          theme: "Cérémonie",
+          count: 12,
+          photos: [
+            { id: "p1", url: "https://picsum.photos/600/400?30", caption: "Cérémonie 1" },
+            { id: "p2", url: "https://picsum.photos/600/400?31", caption: "Cérémonie 2" },
+            { id: "p3", url: "https://picsum.photos/600/400?32", caption: "Cérémonie 3" },
+          ],
+        },
+        {
+          id: "c2",
+          theme: "Photos de groupe",
+          count: 20,
+          photos: [
+            { id: "p4", url: "https://picsum.photos/600/400?33", caption: "Groupe 1" },
+            { id: "p5", url: "https://picsum.photos/600/400?34", caption: "Groupe 2" },
+            { id: "p6", url: "https://picsum.photos/600/400?35", caption: "Groupe 3" },
+          ],
+        },
+      ]);
+    } catch (err) {
+      setError(err.message || "Erreur inconnue");
+      setClusters([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -97,6 +112,8 @@ export default function ClusteringPage() {
                 <div className="spinner" />
                 <div className="loadingText">Analyse des clusters...</div>
               </div>
+            ) : error ? (
+              <ErrorState title="Erreur d'analyse" message={error} onRetry={run} />
             ) : clusters.length === 0 ? (
               <EmptyState
                 icon="🧩"
