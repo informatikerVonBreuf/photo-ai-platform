@@ -5,6 +5,8 @@ import RatingStars from "../ui/RatingStars";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
 import Tooltip from "../ui/Tooltip";
+import Carousel from "../ui/Carousel";
+import PhotoModal from "../ui/PhotoModal";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -23,6 +25,8 @@ export default function ClusteringPage() {
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   async function run() {
     // TODO: /cluster
@@ -66,6 +70,16 @@ export default function ClusteringPage() {
     }
   }
 
+  function openPhotoModal(photo) {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  }
+
+  function closePhotoModal() {
+    setIsPhotoModalOpen(false);
+    setSelectedPhoto(null);
+  }
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
@@ -98,11 +112,6 @@ export default function ClusteringPage() {
             Lancer
           </button>
         </div>
-
-        <RatingStars 
-          featureName="Clustering"
-          onRate={(v) => console.log("rate clustering", v)}
-        />
       </div>
 
       <div className="rightCol">
@@ -139,17 +148,37 @@ export default function ClusteringPage() {
                     <div className="clusterTheme">{cluster.theme}</div>
                     <div className="mutedSmall">{cluster.count} photos</div>
                   </div>
-                  <div className="clusterPhotos">
-                    {cluster.photos.slice(0, 3).map((p) => (
-                      <img key={p.id} src={p.url} alt={p.caption} />
-                    ))}
-                  </div>
+                  <Carousel 
+                    images={cluster.photos.map((p) => p.url)} 
+                    onImageClick={(imageUrl) => openPhotoModal({
+                      url: imageUrl,
+                      name: `Photo du cluster "${cluster.theme}"`,
+                      library: "Clustering",
+                      tags: [cluster.theme],
+                      format: "JPEG"
+                    })}
+                  />
                 </div>
               ))
             )}
           </div>
         </div>
       </div>
+
+      {/* Rating en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Clustering"
+          onRate={(v) => console.log("rate clustering", v)}
+        />
+      </div>
+
+      {/* Modal de détails photo */}
+      <PhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={closePhotoModal}
+        photo={selectedPhoto}
+      />
     </div>
   );
 }

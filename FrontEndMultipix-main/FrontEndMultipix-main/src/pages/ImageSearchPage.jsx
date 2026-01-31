@@ -6,6 +6,7 @@ import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
 import Tooltip from "../ui/Tooltip";
+import PhotoModal from "../ui/PhotoModal";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -26,6 +27,8 @@ export default function ImageSearchPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   const canRun = useMemo(() => Boolean(libraryId) && refFiles.length > 0, [libraryId, refFiles]);
 
@@ -58,6 +61,16 @@ export default function ImageSearchPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openPhotoModal(photo) {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  }
+
+  function closePhotoModal() {
+    setIsPhotoModalOpen(false);
+    setSelectedPhoto(null);
   }
 
   return (
@@ -150,7 +163,7 @@ export default function ImageSearchPage() {
             <div>
               <div className="cardTitle">Résultats</div>
               <div className="cardSub">
-                {results.length ? `${results.length} photo(s)` : "Aucun résultat"}
+                {results.length ? `${results.length} photo(s)` : ""}
               </div>
             </div>
             <button className="btn" disabled={!results.length}>
@@ -175,7 +188,11 @@ export default function ImageSearchPage() {
               />
             ) : (
               results.map((r) => (
-                <div className="tile" key={r.id}>
+                <div 
+                  className="tile" 
+                  key={r.id}
+                  onClick={() => openPhotoModal(r)}
+                >
                   <div className="tileImg">
                     <img src={r.url} alt={r.caption} />
                   </div>
@@ -189,6 +206,21 @@ export default function ImageSearchPage() {
           </div>
         </div>
       </div>
+
+      {/* Rating en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Recherche image"
+          onRate={(v) => console.log("rate image search", v)} 
+        />
+      </div>
+
+      {/* Modal de détails photo */}
+      <PhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={closePhotoModal}
+        photo={selectedPhoto}
+      />
     </div>
   );
 }

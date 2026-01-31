@@ -6,6 +6,7 @@ import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
 import Tooltip from "../ui/Tooltip";
+import PhotoModal from "../ui/PhotoModal";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -34,6 +35,8 @@ export default function FiltersPage() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   function addTag() {
     const t = tagDraft.trim();
@@ -70,6 +73,16 @@ export default function FiltersPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openPhotoModal(photo) {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  }
+
+  function closePhotoModal() {
+    setIsPhotoModalOpen(false);
+    setSelectedPhoto(null);
   }
 
   return (
@@ -149,11 +162,6 @@ export default function FiltersPage() {
 
           <button className="btn primary" onClick={run}>Appliquer</button>
         </div>
-
-        <RatingStars 
-          featureName="Filtres"
-          onRate={(v) => console.log("rate filters", v)}
-        />
       </div>
 
       <div className="rightCol">
@@ -182,7 +190,11 @@ export default function FiltersPage() {
               />
             ) : (
               results.map((r) => (
-                <div className="tile" key={r.id}>
+                <div 
+                  className="tile" 
+                  key={r.id}
+                  onClick={() => openPhotoModal(r)}
+                >
                   <div className="tileImg"><img src={r.url} alt={r.caption} /></div>
                   <div className="tileMeta">
                     <div className="tileCap">{r.caption}</div>
@@ -193,6 +205,21 @@ export default function FiltersPage() {
           </div>
         </div>
       </div>
+
+      {/* Rating en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Filtres"
+          onRate={(v) => console.log("rate filters", v)}
+        />
+      </div>
+
+      {/* Modal de détails photo */}
+      <PhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={closePhotoModal}
+        photo={selectedPhoto}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
 import Tooltip from "../ui/Tooltip";
+import PhotoModal from "../ui/PhotoModal";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -25,6 +26,8 @@ export default function TextSearchPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   const canRun = useMemo(() => Boolean(libraryId) && query.trim().length > 0, [libraryId, query]);
 
@@ -49,9 +52,48 @@ export default function TextSearchPage() {
       // Ici: mock results
       await new Promise((r) => setTimeout(r, 500));
       setResults([
-        { id: "p1", url: "https://picsum.photos/600/400?1", caption: "Photo de groupe", score: 0.91 },
-        { id: "p2", url: "https://picsum.photos/600/400?2", caption: "Cérémonie", score: 0.87 },
-        { id: "p3", url: "https://picsum.photos/600/400?3", caption: "Danse", score: 0.82 },
+        { 
+          id: "p1", 
+          url: "https://picsum.photos/600/400?1", 
+          caption: "Photo de groupe",
+          name: "IMG_20260115_124530.jpg",
+          date: "15 janvier 2026",
+          dimensions: "4000 × 3000 px",
+          size: "2.4 MB",
+          format: "JPEG",
+          library: "Mariages 2024",
+          shooting: "Mariage — Marie & Rochinel",
+          tags: ["portrait", "groupe", "extérieur"],
+          score: 0.91 
+        },
+        { 
+          id: "p2", 
+          url: "https://picsum.photos/600/400?2", 
+          caption: "Cérémonie",
+          name: "IMG_20260115_140000.jpg",
+          date: "15 janvier 2026",
+          dimensions: "3840 × 2560 px",
+          size: "1.8 MB",
+          format: "JPEG",
+          library: "Mariages 2024",
+          shooting: "Mariage — Marie & Rochinel",
+          tags: ["cérémonie", "intérieur"],
+          score: 0.87 
+        },
+        { 
+          id: "p3", 
+          url: "https://picsum.photos/600/400?3", 
+          caption: "Danse",
+          name: "IMG_20260115_185000.jpg",
+          date: "15 janvier 2026",
+          dimensions: "4000 × 3000 px",
+          size: "2.2 MB",
+          format: "JPEG",
+          library: "Mariages 2024",
+          shooting: "Mariage — Marie & Rochinel",
+          tags: ["danse", "soirée", "ambiance"],
+          score: 0.82 
+        },
       ]);
     } catch (err) {
       setError(err.message || "Erreur inconnue");
@@ -59,6 +101,16 @@ export default function TextSearchPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openPhotoModal(photo) {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  }
+
+  function closePhotoModal() {
+    setIsPhotoModalOpen(false);
+    setSelectedPhoto(null);
   }
 
   return (
@@ -116,13 +168,6 @@ export default function TextSearchPage() {
       </div>
 
       <div className="fullRow">
-        <RatingStars 
-          featureName="Recherche texte"
-          onRate={(v) => console.log("rate text search", v)} 
-        />
-      </div>
-
-      <div className="fullRow">
         <div className="card">
           <div className="cardHeader">
             <div>
@@ -153,7 +198,11 @@ export default function TextSearchPage() {
               />
             ) : (
               results.map((r) => (
-                <div className="tile" key={r.id}>
+                <div 
+                  className="tile" 
+                  key={r.id}
+                  onClick={() => openPhotoModal(r)}
+                >
                   <div className="tileImg">
                     <img src={r.url} alt={r.caption} />
                   </div>
@@ -167,6 +216,21 @@ export default function TextSearchPage() {
           </div>
         </div>
       </div>
+
+      {/* Rating en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Recherche texte"
+          onRate={(v) => console.log("rate text search", v)} 
+        />
+      </div>
+
+      {/* Modal de détails photo */}
+      <PhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={closePhotoModal}
+        photo={selectedPhoto}
+      />
     </div>
   );
 }
