@@ -1,6 +1,6 @@
 :root {
   /* ==================== PALETTE PRINCIPALE (Violet + Bleu foncé) ==================== */
-  --bg0: #0C0032;           /* Noir bleuté profond - Background principal */
+  --bg0: #131114;           /* Noir bleuté profond - Background principal */
   --bg1: #190061;           /* Violet très foncé - Cartes primaires */
   --bg2: #240090;           /* Violet foncé - Cartes secondaires */
   --bg3: #3500D3;           /* Violet électrique - Accents */
@@ -75,6 +75,33 @@
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
+/* ==================== CONTENEURS PRINCIPAUX (Arrière-plan 3D + Contenu) ==================== */
+
+#root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-root {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.app-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 
 /* ==================== BASE STYLES ==================== */
 
@@ -297,12 +324,12 @@ a:hover {
 }
 
 /* Page tones (multi couleurs) */
-.tone-libraries{ --accent:#22c55e; --accent2:#14b8a6; }
-.tone-text{ --accent:#60a5fa; --accent2:#a78bfa; }
-.tone-image{ --accent:#f59e0b; --accent2:#fb7185; }
-.tone-filters{ --accent:#34d399; --accent2:#22c55e; }
-.tone-cluster{ --accent:#a78bfa; --accent2:#60a5fa; }
-.tone-assistant{ --accent:#fb7185; --accent2:#f59e0b; }
+.tone-libraries{ --accent:#0048ff; --accent2:#3500D3; }
+.tone-text{ --accent:#ff3030; --accent2:#8860D0; }
+.tone-image{ --accent:#3dff5d; --accent2:#5AB9EA; }
+.tone-filters{ --accent:#00c8ff; --accent2:#84CEEB; }
+.tone-cluster{ --accent:#ffee00; --accent2:#8860D0; }
+.tone-assistant{ --accent:#d000ff; --accent2:#5880E9; }
 
 .shell{
   display:grid;
@@ -337,7 +364,13 @@ a:hover {
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 45%, transparent), color-mix(in srgb, var(--accent2) 40%, transparent));
   border:1px solid rgba(255,255,255,.12);
 }
-.brandTitle{ font-weight:800; font-size:19px; letter-spacing: -0.3px; }
+.logo img{
+  width:100%;
+  height:100%;
+  object-fit: contain;
+  display:block;
+}
+.brandTitle{ font-family: var(--font-heading); font-weight:800; font-size:23px; letter-spacing: -0.3px; }
 .brandSub{ color:var(--muted); font-size:12px; }
 
 .nav{ display:grid; gap:8px; padding:8px 0; }
@@ -349,9 +382,12 @@ a:hover {
   border:1px solid transparent;
   transition: .2s ease;
 }
-.navItem:hover{
+.navItem:hover {
   background: rgba(255,255,255,.08);
-  color:var(--text);
+  color: var(--text);
+}
+.navItem:hover .navIcon {
+  color: var(--nav-color);
 }
 .navItem.active{
   color:var(--text);
@@ -395,7 +431,7 @@ a:hover {
 }
 .welcomeTitle {
   font-family: var(--font-heading);
-  font-size: 40px;
+  font-size: 50px;
   font-weight: 400;
   color: var(--text);
   margin: 0;
@@ -417,11 +453,12 @@ a:hover {
 
 /* Cards */
 .card{
-  border:1px solid var(--stroke-strong);
-  background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
-  border-radius: var(--r-xl);
+  border:30px solid var(--stroke-soft);
+  background: linear-gradient(180deg, var(--card), rgba(251, 11, 11, 0.06));
+  border-radius: 4px;
   box-shadow: var(--shadow2);
-  padding:20px;
+  padding:10px;
+  backdrop-filter: blur(6px);
 }
 .cardHeader{
   display:flex;
@@ -466,6 +503,35 @@ input:focus,select:focus{
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
+/* Bouton de sélection de fichier (Recherche par image) */
+.fileInput{
+  font-family: var(--font-body);
+}
+.fileInput::file-selector-button{
+  margin-right: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border:1px solid var(--stroke-strong);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 30%, transparent),
+    color-mix(in srgb, var(--accent2) 22%, transparent)
+  );
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fileInput::file-selector-button:hover{
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 38%, transparent),
+    color-mix(in srgb, var(--accent2) 28%, transparent)
+  );
+}
+
 .btn{
   border:1px solid var(--stroke-strong);
   background: rgba(255,255,255,.06);
@@ -484,9 +550,29 @@ input:focus,select:focus{
     color-mix(in srgb, var(--accent) 30%, transparent),
     color-mix(in srgb, var(--accent2) 22%, transparent)
   );
+  color: var(--text);
 }
 .btn.primary:hover{
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Boutons d'action principaux (Créer, Lancer la recherche, Appliquer, Lancer) */
+.btnAction {
+  color: #240090 !important;
+  border-color: rgba(36, 0, 144, 0.4);
+  background: linear-gradient(135deg,
+    rgba(36, 0, 144, 0.12),
+    rgba(53, 0, 211, 0.08)
+  );
+}
+
+.btnAction:hover {
+  border-color: rgba(36, 0, 144, 0.6);
+  background: linear-gradient(135deg,
+    rgba(36, 0, 144, 0.18),
+    rgba(53, 0, 211, 0.12)
+  );
+  color: #1a004d !important;
 }
 .btn.ghost{ background: transparent; }
 .btn.danger{
@@ -714,6 +800,7 @@ input:focus,select:focus{
   border:1px solid var(--stroke-strong);
   background: rgba(0,0,0,.16);
   color:var(--text);
+  font-family: var(--font-body);
   font-size:13px;
   font-weight: 500;
 }
@@ -727,6 +814,30 @@ input:focus,select:focus{
   color: rgba(255,255,255,.75);
   cursor:pointer;
   font-size:14px;
+}
+
+/* Tags - bouton en dessous de l'input */
+.tagAddRow{
+  display:flex;
+  flex-direction: row;
+  gap:16px;
+  align-items: flex-start;
+}
+
+.tagAddControls{
+  display:flex;
+  flex-direction: column;
+  gap:10px;
+  min-width: 220px;
+}
+
+.tagAddRow .chipBox{
+  align-self: flex-start;
+}
+
+.tagAddBtn{
+  width: fit-content;
+  align-self: flex-start;
 }
 
 /* Gallery */
@@ -837,6 +948,16 @@ input:focus,select:focus{
   color: var(--muted);
   padding:8px 10px;
   cursor:pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+  transition: box-shadow 200ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              background 200ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              color 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.toggleBtn:hover{
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .toggleBtn.on{
   color: var(--text);
@@ -903,32 +1024,64 @@ input:focus,select:focus{
 /* Auth page */
 .auth{
   min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+}
+.authLayout{
+  width: min(980px, 100%);
   display:grid;
-  place-items:center;
-  padding:24px;
+  grid-template-columns: 1fr 420px;
+  gap: 32px;
+  align-items:start;
 }
 .authCard{
-  width: min(520px, 100%);
-  border-radius: 26px;
-  border:1px solid var(--stroke-strong);
-  background:
-    radial-gradient(900px 520px at 15% 20%, rgba(108,124,255,.25), transparent 60%),
-    radial-gradient(900px 520px at 80% 70%, rgba(156,108,255,.18), transparent 60%),
-    rgba(255,255,255,.04);
-  box-shadow: var(--shadow);
   padding:18px;
 }
-.authTop{ display:flex; gap:12px; align-items:center; margin-bottom:14px; }
+.authBrand{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top: 8vh;
+}
 .authLogo{
-  width:46px; height:46px;
+  width:52px; height:52px;
   display:grid; place-items:center;
   border-radius: 16px;
   font-weight:900;
   background: linear-gradient(135deg, rgba(108,124,255,.35), rgba(156,108,255,.25));
   border:1px solid rgba(255,255,255,.12);
 }
-.authTitle{ font-weight:900; font-size:20px; }
-.authSub{ color:var(--muted); font-size:12px; margin-top:4px; }
+.authLogo img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.authTitle{ font-family: var(--font-heading); font-weight:700; font-size:120px; letter-spacing: -0.6px; line-height: 1.05; }
+.authSub{ color:var(--muted); font-size:14px; margin-top:4px; font-family: var(--font-body); max-width: 420px; }
+.authForm{ display:grid; gap:12px; }
+
+.authForm .field,
+.authForm .fieldLabel,
+.authForm input,
+.authForm button{
+  font-family: var(--font-body);
+}
+
+@media (max-width: 900px){
+  .authLayout{
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .authBrand{
+    margin-top: 0;
+  }
+  .authTitle{
+    font-size: 42px;
+  }
+}
 .authForm{ display:grid; gap:12px; }
 
 /* Animations and Micro-interactions */

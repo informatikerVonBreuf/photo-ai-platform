@@ -20,7 +20,7 @@ const MOCK_SHOOTINGS = [
 ];
 
 export default function ImageSearchPage() {
-  const [libraryId, setLibraryId] = useState("lib1");
+  const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
   const [refFiles, setRefFiles] = useState([]);
   const [logic, setLogic] = useState("intersection"); // intersection | union
@@ -116,6 +116,7 @@ export default function ImageSearchPage() {
           <label className="field italic">
             Importer depuis ton PC
             <input
+              className="fileInput"
               type="file"
               accept="image/*"
               multiple

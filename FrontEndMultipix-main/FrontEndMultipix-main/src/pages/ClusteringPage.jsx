@@ -20,7 +20,7 @@ const MOCK_SHOOTINGS = [
 ];
 
 export default function ClusteringPage() {
-  const [libraryId, setLibraryId] = useState("lib1");
+  const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -1,13 +1,22 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import WelcomeHeader from "../ui/WelcomeHeader";
 
+import { 
+  Books, 
+  MagnifyingGlass, 
+  Image, 
+  Sliders, 
+  GridFour, 
+  Robot 
+} from "@phosphor-icons/react";
+
 const NAV = [
-  { to: "/libraries", label: "Bibliothèques", icon: "📚", tone: "tone-libraries" },
-  { to: "/search-text", label: "Recherche texte", icon: "🔎", tone: "tone-text" },
-  { to: "/search-image", label: "Recherche image", icon: "🖼️", tone: "tone-image" },
-  { to: "/filters", label: "Filtres", icon: "🎛️", tone: "tone-filters" },
-  { to: "/clustering", label: "Clustering", icon: "🧩", tone: "tone-cluster" },
-  { to: "/assistant", label: "Assistant IA", icon: "🤖", tone: "tone-assistant" },
+  { to: "/libraries", label: "Bibliothèques", icon: <Books size={18} />, tone: "tone-libraries", color: "#80a4ff" },
+  { to: "/search-text", label: "Recherche texte", icon: <MagnifyingGlass size={18} />, tone: "tone-text", color: "#ff8686" },
+  { to: "/search-image", label: "Recherche image", icon: <Image size={18} />, tone: "tone-image", color: "#b0ffbd" },
+  { to: "/filters", label: "Filtres", icon: <Sliders size={18} />, tone: "tone-filters", color: "#83e4ff" },
+  { to: "/clustering", label: "Clustering", icon: <GridFour size={18} />, tone: "tone-cluster", color: "#fff67a" },
+  { to: "/assistant", label: "Assistant IA", icon: <Robot size={18} />, tone: "tone-assistant", color: "#ea8aff" },
 ];
 
 function getTone(pathname) {
@@ -31,10 +40,11 @@ export default function DashboardLayout() {
     <div className={`shell ${tone}`}>
       <aside className="sidebar">
         <div className="brand">
-          <div className="logo">MPX</div>
+          <div className="logo">
+            <img src="/Logo/logotransparent3.png" alt="Multipix" />
+          </div>
           <div className="brandText">
             <div className="brandTitle">Multipix</div>
-            <div className="brandSub">Plateforme IA pour photographes</div>
           </div>
         </div>
 
@@ -43,6 +53,7 @@ export default function DashboardLayout() {
             <NavLink
               key={it.to}
               to={it.to}
+                style={{ "--nav-color": it.color }}
               className={({ isActive }) => `navItem ${isActive ? "active" : ""}`}
             >
               <span className="navIcon">{it.icon}</span>

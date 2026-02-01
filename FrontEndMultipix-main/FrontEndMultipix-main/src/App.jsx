@@ -8,6 +8,8 @@ import ImageSearchPage from "./pages/ImageSearchPage";
 import FiltersPage from "./pages/FiltersPage";
 import ClusteringPage from "./pages/ClusteringPage";
 import AssistantPage from "./pages/AssistantPage";
+import BackgroundScene from "./components/BackgroundScene";
+import "./styles/dropdown.css";
 
 import "./App.css";
 
@@ -19,6 +21,9 @@ function RequireAuth({ children }) {
 
 export default function App() {
   return (
+    <div className="app-root">
+      <BackgroundScene />
+      <div className="app-content">
     <Routes>
       <Route path="/login" element={<LoginPage />} />
 
@@ -41,5 +46,7 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </div>
+    </div>
   );
 }

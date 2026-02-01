@@ -7,6 +7,9 @@ import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
 import Tooltip from "../ui/Tooltip";
 import PhotoModal from "../ui/PhotoModal";
+import Dropdown from "../components/Dropdown";
+import DateTimePicker from "../components/DateTimePicker";
+import "../styles/dropdown.css";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -20,14 +23,14 @@ const MOCK_SHOOTINGS = [
 ];
 
 export default function FiltersPage() {
-  const [libraryId, setLibraryId] = useState("lib1");
+  const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
 
   const [tags, setTags] = useState([]);
   const [tagDraft, setTagDraft] = useState("");
 
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(null);
+  const [to, setTo] = useState(null);
   const [orientation, setOrientation] = useState("any");
   const [maxW, setMaxW] = useState("");
   const [maxH, setMaxH] = useState("");
@@ -127,23 +130,24 @@ export default function FiltersPage() {
             </div>
           </div>
 
-          <div className="row">
-            <input
-              value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
-              placeholder="ex: portrait, mariage..."
-              onKeyDown={handleKeyDown}
-            />
-            <button className="btn" onClick={addTag}>Ajouter</button>
-          </div>
-
-          <div className="chipBox">
-            {tags.map((t) => (
-              <span className="chip on" key={t}>
-                {t}
-                <button className="chipX" onClick={() => setTags(tags.filter((x) => x !== t))}>×</button>
-              </span>
-            ))}
+          <div className="tagAddRow">
+            <div className="tagAddControls">
+              <input
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                placeholder="ex: portrait, mariage..."
+                onKeyDown={handleKeyDown}
+              />
+              <button className="btn tagAddBtn" onClick={addTag}>Ajouter</button>
+            </div>
+            <div className="chipBox">
+              {tags.map((t) => (
+                <span className="chip on" key={t}>
+                  {t}
+                  <button className="chipX" onClick={() => setTags(tags.filter((x) => x !== t))}>×</button>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -157,18 +161,36 @@ export default function FiltersPage() {
           </div>
 
           <div className="grid2">
-            <label className="field">Du <input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-            <label className="field">Au <input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} /></label>
-
             <label className="field">
-              Orientation
-              <select value={orientation} onChange={(e) => setOrientation(e.target.value)}>
-                <option value="any">Toutes</option>
-                <option value="portrait">Portrait</option>
-                <option value="landscape">Paysage</option>
-                <option value="square">Carrée</option>
-              </select>
+              Du
+              <DateTimePicker
+                value={from}
+                onChange={(date) => setFrom(date)}
+                placeholder="Sélectionner une date"
+              />
             </label>
+            <label className="field">
+              Au
+              <DateTimePicker
+                value={to}
+                onChange={(date) => setTo(date)}
+                placeholder="Sélectionner une date"
+              />
+            </label>
+
+            <div className="field">
+              <div className="fieldLabel">Orientation</div>
+              <Dropdown
+                label="Toutes"
+                items={[
+                  { value: "any", label: "Toutes" },
+                  { value: "portrait", label: "Portrait" },
+                  { value: "landscape", label: "Paysage" },
+                  { value: "square", label: "Carrée" },
+                ]}
+                onSelect={(item) => setOrientation(item.value)}
+              />
+            </div>
 
             <label className="field">Largeur max (px) <input value={maxW} onChange={(e) => setMaxW(e.target.value)} placeholder="ex: 4000" /></label>
             <label className="field">Hauteur max (px) <input value={maxH} onChange={(e) => setMaxH(e.target.value)} placeholder="ex: 3000" /></label>
