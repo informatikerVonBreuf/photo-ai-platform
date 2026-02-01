@@ -80,6 +80,24 @@ export default function ClusteringPage() {
     setSelectedPhoto(null);
   }
 
+  function handleDeletePhoto(photo) {
+    console.log("Suppression de la photo:", photo);
+    
+    // TODO: Appel API pour supprimer la photo du backend
+    // await fetch(`/api/photos/${photo.id}`, { method: 'DELETE' });
+    
+    // Mettre à jour l'état local en retirant la photo des clusters
+    setClusters((prevClusters) => 
+      prevClusters.map((cluster) => ({
+        ...cluster,
+        photos: cluster.photos.filter((p) => p.url !== photo.url),
+        count: cluster.count - 1
+      })).filter((cluster) => cluster.count > 0)
+    );
+    
+    console.log("Photo supprimée avec succès");
+  }
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
@@ -178,6 +196,7 @@ export default function ClusteringPage() {
         isOpen={isPhotoModalOpen}
         onClose={closePhotoModal}
         photo={selectedPhoto}
+        onDelete={handleDeletePhoto}
       />
     </div>
   );

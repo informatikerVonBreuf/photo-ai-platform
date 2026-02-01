@@ -370,7 +370,39 @@ input:focus,select:focus{
   align-items:center;
   margin: 12px 0;
 }
-.toggleLabel{ color:var(--muted); font-size:12px; }
+.toggleLabel{ 
+  color:var(--muted); 
+  font-size:12px; 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  border: 1.5px solid var(--stroke);
+  border-radius: 50%;
+  cursor: help;
+  transition: all 0.2s ease;
+  font-style: normal;
+  line-height: 1;
+  user-select: none;
+}
+
+.infoIcon:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(108, 99, 255, 0.1);
+  transform: scale(1.1);
+}
 .toggle{
   display:flex;
   border-radius: 999px;
@@ -968,6 +1000,13 @@ input:focus, select:focus {
   border-radius: 12px;
   font-size: 11px;
   color: var(--text);
+}
+
+/* Style pour "Non renseigné" */
+.photoModalEmpty {
+  font-style: italic;
+  color: var(--muted);
+  opacity: 0.6;
 }
 
 /* ========================================
@@ -1595,6 +1634,62 @@ input.error:focus, select.error:focus {
   left: calc(100% + 8px);
   top: 50%;
   transform: translateY(-50%);
+}
+
+/* ==================== CONFIRM DIALOG ==================== */
+.confirmDialogContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 0;
+  min-width: 400px;
+}
+
+.confirmDialogMessage {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+}
+
+.confirmDialogActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Bouton danger */
+.btnDanger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.btnDanger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btnDanger:active {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .confirmDialogContent {
+    min-width: auto;
+  }
+
+  .confirmDialogActions {
+    flex-direction: column-reverse;
+  }
+
+  .confirmDialogActions .btn {
+    width: 100%;
+  }
 }
 
 /* Animation */

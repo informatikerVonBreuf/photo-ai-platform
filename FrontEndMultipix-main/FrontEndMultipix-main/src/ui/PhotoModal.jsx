@@ -1,13 +1,39 @@
+import { useState } from "react";
 import Modal from "./Modal";
+import ConfirmDialog from "./ConfirmDialog";
 
-export default function PhotoModal({ isOpen, onClose, photo }) {
+export default function PhotoModal({ isOpen, onClose, photo, onDelete }) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   if (!photo) return null;
 
-  // Helper pour vérifier si une valeur existe
-  const hasValue = (value) => value !== null && value !== undefined && value !== "";
+  // Fonction helper pour afficher une valeur ou "Non renseigné"
+  const displayValue = (value) => {
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      return <span className="photoModalEmpty">Non renseigné</span>;
+    }
+    return value;
+  };
+
+  function handleDeleteClick() {
+    setShowDeleteConfirm(true);
+  }
+
+  function handleConfirmDelete() {
+    if (onDelete) {
+      onDelete(photo);
+    }
+    setShowDeleteConfirm(false);
+    onClose();
+  }
+
+  function handleCancelDelete() {
+    setShowDeleteConfirm(false);
+  }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Détails de la photo">
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title="Détails de la photo">
       <div className="photoModalContent">
         {/* Image principale */}
         <div className="photoModalImageWrapper">
@@ -18,94 +44,69 @@ export default function PhotoModal({ isOpen, onClose, photo }) {
           />
         </div>
 
-        {/* Informations - Afficher uniquement si données disponibles */}
+        {/* Informations */}
         <div className="photoModalInfo">
-          {hasValue(photo.name) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Nom</span>
-              <span className="photoModalValue">{photo.name}</span>
-            </div>
-          )}
+          {/* Nom du fichier */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Nom</span>
+            <span className="photoModalValue">{displayValue(photo.name)}</span>
+          </div>
 
-          {hasValue(photo.date) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Date</span>
-              <span className="photoModalValue">{photo.date}</span>
-            </div>
-          )}
+          {/* Date */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Date</span>
+            <span className="photoModalValue">{displayValue(photo.date)}</span>
+          </div>
 
-          {hasValue(photo.dimensions) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Dimensions</span>
-              <span className="photoModalValue">{photo.dimensions}</span>
-            </div>
-          )}
+          {/* Dimensions */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Dimensions</span>
+            <span className="photoModalValue">{displayValue(photo.dimensions)}</span>
+          </div>
 
-          {hasValue(photo.size) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Taille</span>
-              <span className="photoModalValue">{photo.size}</span>
-            </div>
-          )}
+          {/* Taille du fichier */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Taille</span>
+            <span className="photoModalValue">{displayValue(photo.size)}</span>
+          </div>
 
-          {hasValue(photo.format) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Format</span>
-              <span className="photoModalValue">{photo.format}</span>
-            </div>
-          )}
+          {/* Format */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Format</span>
+            <span className="photoModalValue">{displayValue(photo.format)}</span>
+          </div>
 
-          {hasValue(photo.library) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Bibliothèque</span>
-              <span className="photoModalValue">{photo.library}</span>
-            </div>
-          )}
+          {/* Bibliothèque */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Bibliothèque</span>
+            <span className="photoModalValue">{displayValue(photo.library)}</span>
+          </div>
 
-          {hasValue(photo.shooting) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Shooting</span>
-              <span className="photoModalValue">{photo.shooting}</span>
-            </div>
-          )}
+          {/* Shooting */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Shooting</span>
+            <span className="photoModalValue">{displayValue(photo.shooting)}</span>
+          </div>
 
-          {photo.tags && photo.tags.length > 0 && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Tags</span>
+          {/* Tags */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Tags</span>
+            {photo.tags && photo.tags.length > 0 ? (
               <div className="photoModalTags">
                 {photo.tags.map((tag, idx) => (
                   <span key={idx} className="photoModalTag">{tag}</span>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <span className="photoModalValue">{displayValue(null)}</span>
+            )}
+          </div>
 
-          {hasValue(photo.description) && (
-            <div className="photoModalRow">
-              <span className="photoModalLabel">Description</span>
-              <span className="photoModalValue">{photo.description}</span>
-            </div>
-          )}
-
-          {/* Message si aucune info disponible */}
-          {!hasValue(photo.name) && 
-           !hasValue(photo.date) && 
-           !hasValue(photo.dimensions) && 
-           !hasValue(photo.size) && 
-           !hasValue(photo.format) && 
-           !hasValue(photo.library) && 
-           !hasValue(photo.shooting) && 
-           (!photo.tags || photo.tags.length === 0) && 
-           !hasValue(photo.description) && (
-            <div style={{ 
-              padding: "20px", 
-              textAlign: "center", 
-              color: "var(--muted)",
-              fontSize: "13px"
-            }}>
-              <em>Informations détaillées disponibles après connexion au backend</em>
-            </div>
-          )}
+          {/* Description/Notes */}
+          <div className="photoModalRow">
+            <span className="photoModalLabel">Description</span>
+            <span className="photoModalValue">{displayValue(photo.description)}</span>
+          </div>
         </div>
 
         {/* Actions */}
@@ -113,17 +114,26 @@ export default function PhotoModal({ isOpen, onClose, photo }) {
           <button className="btn">Télécharger</button>
           <button className="btn">Modifier</button>
           <button 
-            className="btn" 
-            style={{ 
-              background: "rgba(239, 68, 68, 0.15)",
-              borderColor: "rgba(239, 68, 68, 0.4)",
-              color: "#ef4444"
-            }}
+            className="btn btnDanger"
+            onClick={handleDeleteClick}
           >
             Supprimer
           </button>
         </div>
       </div>
     </Modal>
+
+      {/* Dialog de confirmation de suppression */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Supprimer la photo"
+        message={`Êtes-vous sûr de vouloir supprimer "${photo.name || 'cette photo'}" ? Cette action est irréversible.`}
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        danger={true}
+      />
+    </>
   );
 }

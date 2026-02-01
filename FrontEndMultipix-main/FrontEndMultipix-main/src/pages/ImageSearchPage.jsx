@@ -73,6 +73,20 @@ export default function ImageSearchPage() {
     setSelectedPhoto(null);
   }
 
+  function handleDeletePhoto(photo) {
+    console.log("Suppression de la photo:", photo);
+    
+    // TODO: Appel API pour supprimer la photo du backend
+    // await fetch(`/api/photos/${photo.id}`, { method: 'DELETE' });
+    
+    // Mettre à jour l'état local en retirant la photo des résultats
+    setResults((prevResults) => 
+      prevResults.filter((p) => p.id !== photo.id)
+    );
+    
+    console.log("Photo supprimée avec succès");
+  }
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
@@ -111,30 +125,30 @@ export default function ImageSearchPage() {
           </label>
 
           <div className="toggleRow">
-            <div className="toggleLabel">Logique</div>
+            <div className="toggleLabel">
+              Logique
+              <Tooltip 
+                text="Intersection : Images avec toutes les images de référence / Union : Images avec n'importe quelle image de référence" 
+                position="top"
+              >
+                <span className="infoIcon">ⓘ</span>
+              </Tooltip>
+            </div>
             <div className="toggle">
-              <Tooltip text="Images avec toutes les images de référence" position="top">
-                <span style={{ display: "contents" }}>
-                  <button
-                    type="button"
-                    className={`toggleBtn ${logic === "intersection" ? "on" : ""}`}
-                    onClick={() => setLogic("intersection")}
-                  >
-                    Intersection
-                  </button>
-                </span>
-              </Tooltip>
-              <Tooltip text="Images avec n'importe quelle image de référence" position="top">
-                <span style={{ display: "contents" }}>
-                  <button
-                    type="button"
-                    className={`toggleBtn ${logic === "union" ? "on" : ""}`}
-                    onClick={() => setLogic("union")}
-                  >
-                    Union
-                  </button>
-                </span>
-              </Tooltip>
+              <button
+                type="button"
+                className={`toggleBtn ${logic === "intersection" ? "on" : ""}`}
+                onClick={() => setLogic("intersection")}
+              >
+                Intersection
+              </button>
+              <button
+                type="button"
+                className={`toggleBtn ${logic === "union" ? "on" : ""}`}
+                onClick={() => setLogic("union")}
+              >
+                Union
+              </button>
             </div>
           </div>
 
@@ -146,11 +160,6 @@ export default function ImageSearchPage() {
             (Prochain step) Ajouter un sélecteur “Choisir une photo depuis la library”.
           </div>
         </div>
-
-        <RatingStars 
-          featureName="Recherche image"
-          onRate={(v) => console.log("rate image search", v)} 
-        />
       </div>
 
       <div className="rightCol">
@@ -220,6 +229,7 @@ export default function ImageSearchPage() {
         isOpen={isPhotoModalOpen}
         onClose={closePhotoModal}
         photo={selectedPhoto}
+        onDelete={handleDeletePhoto}
       />
     </div>
   );
