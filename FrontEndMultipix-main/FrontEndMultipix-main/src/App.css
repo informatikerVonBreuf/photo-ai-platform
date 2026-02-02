@@ -374,6 +374,14 @@ a:hover {
 .brandSub{ color:var(--muted); font-size:12px; }
 
 .nav{ display:grid; gap:8px; padding:8px 0; }
+
+/* Contrôle du modèle 3D en haut à droite */
+.bgModelControl{
+  position: fixed;
+  top: 16px;
+  right: 32px;
+  z-index: 8000;
+}
 .navItem{
   display:flex; gap:10px; align-items:center;
   padding:10px 12px;

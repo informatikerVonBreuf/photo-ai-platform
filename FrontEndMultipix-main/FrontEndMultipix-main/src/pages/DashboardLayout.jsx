@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import WelcomeHeader from "../ui/WelcomeHeader";
+import Dropdown from "../components/Dropdown";
 
 import { 
   Books, 
@@ -24,11 +25,12 @@ function getTone(pathname) {
   return item?.tone || "tone-default";
 }
 
-export default function DashboardLayout() {
+export default function DashboardLayout({ bgModel, onChangeBgModel, bgModelOptions = [] }) {
   const { pathname } = useLocation();
   const nav = useNavigate();
   const user = JSON.parse(localStorage.getItem("mpx_user") || "{}");
   const tone = getTone(pathname);
+  const currentBgLabel = bgModelOptions.find((o) => o.value === bgModel)?.label || "Objet 3D";
 
   function logout() {
     localStorage.removeItem("mpx_token");
@@ -38,6 +40,15 @@ export default function DashboardLayout() {
 
   return (
     <div className={`shell ${tone}`}>
+      <div className="bgModelControl">
+        <Dropdown
+          key={bgModel}
+          label={currentBgLabel}
+          items={bgModelOptions}
+          onSelect={(item) => onChangeBgModel?.(item.value)}
+          menuWidth={220}
+        />
+      </div>
       <aside className="sidebar">
         <div className="brand">
           <div className="logo">

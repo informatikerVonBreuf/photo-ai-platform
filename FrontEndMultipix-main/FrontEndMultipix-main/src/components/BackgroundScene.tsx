@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { useEffect, useState } from 'react';
 import FloatingModel from './FloatingModel';
 
-export default function BackgroundScene() {
+export default function BackgroundScene({ modelPath = null }) {
   const [ambientColor, setAmbientColor] = useState('#6c7cff');
 
   useEffect(() => {
@@ -45,11 +45,11 @@ export default function BackgroundScene() {
       <directionalLight
         position={[5, 5, 8]}
         intensity={1.2}
-        color="#000000"
+        color="#ffffff"
         castShadow
       />
 
-      <FloatingModel />
+      {modelPath ? <FloatingModel modelPath={modelPath} /> : null}
 
       <color attach="background" args={['rgb(19, 17, 20)']} />
     </Canvas>
