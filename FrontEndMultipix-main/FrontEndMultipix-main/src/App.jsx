@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import DashboardLayout from "./pages/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 
@@ -8,6 +9,8 @@ import ImageSearchPage from "./pages/ImageSearchPage";
 import FiltersPage from "./pages/FiltersPage";
 import ClusteringPage from "./pages/ClusteringPage";
 import AssistantPage from "./pages/AssistantPage";
+import BackgroundScene from "./components/BackgroundScene";
+import "./styles/dropdown.css";
 
 import "./App.css";
 
@@ -17,8 +20,27 @@ function RequireAuth({ children }) {
   return children;
 }
 
+const BG_MODELS = [
+  { value: "none", label: "Aucun objet" },
+  { value: "/models/camera4.glb", label: "Surveillance" },
+  { value: "/models/camera5.glb", label: "Leica" },
+  { value: "/models/camera6.glb", label: "Canon" },
+  { value: "/models/camera7.glb", label: "Exacta" },
+  { value: "/models/camera11.glb", label: "Keystone" },
+  { value: "/models/camera12.glb", label: "Sniper" },
+];
+
 export default function App() {
+  const defaultBgModel = useMemo(() => {
+    const candidates = BG_MODELS.filter((m) => m.value !== "none");
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    return pick?.value || "none";
+  }, []);
+  const [bgModel, setBgModel] = useState(defaultBgModel);
   return (
+    <div className="app-root">
+      <BackgroundScene modelPath={bgModel === "none" ? null : bgModel} />
+      <div className="app-content">
     <Routes>
       <Route path="/login" element={<LoginPage />} />
 
@@ -26,7 +48,7 @@ export default function App() {
         path="/"
         element={
           <RequireAuth>
-            <DashboardLayout />
+            <DashboardLayout bgModel={bgModel} onChangeBgModel={setBgModel} bgModelOptions={BG_MODELS} />
           </RequireAuth>
         }
       >
@@ -41,5 +63,7 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </div>
+    </div>
   );
 }

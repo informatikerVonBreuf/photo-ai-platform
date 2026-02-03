@@ -2,6 +2,14 @@ import { useState } from "react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
+import SkeletonCard from "../ui/SkeletonCard";
+import EmptyState from "../ui/EmptyState";
+import ErrorState from "../ui/ErrorState";
+import Tooltip from "../ui/Tooltip";
+import PhotoModal from "../ui/PhotoModal";
+import Dropdown from "../components/Dropdown";
+import DateTimePicker from "../components/DateTimePicker";
+import "../styles/dropdown.css";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -15,19 +23,23 @@ const MOCK_SHOOTINGS = [
 ];
 
 export default function FiltersPage() {
-  const [libraryId, setLibraryId] = useState("lib1");
+  const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
 
   const [tags, setTags] = useState([]);
   const [tagDraft, setTagDraft] = useState("");
 
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(null);
+  const [to, setTo] = useState(null);
   const [orientation, setOrientation] = useState("any");
   const [maxW, setMaxW] = useState("");
   const [maxH, setMaxH] = useState("");
 
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   function addTag() {
     const t = tagDraft.trim();
@@ -36,15 +48,69 @@ export default function FiltersPage() {
     setTagDraft("");
   }
 
+  function handleKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  }
+
   async function run() {
     // TODO: appeler /filters avec scope + filtres
-    setResults([
-      { id: "p1", url: "https://picsum.photos/600/400?20", caption: "Filtré", score: 1 },
-    ]);
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Simulation d'erreur aléatoire (1 chance sur 3)
+      if (Math.random() < 0.33) {
+        throw new Error("Erreur de connexion au serveur");
+      }
+
+      await new Promise((r) => setTimeout(r, 600));
+      setResults([
+        { id: "p1", url: "https://picsum.photos/600/400?20", caption: "Filtré", score: 1 },
+      ]);
+    } catch (err) {
+      setError(err.message || "Erreur inconnue");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openPhotoModal(photo) {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  }
+
+  function closePhotoModal() {
+    setIsPhotoModalOpen(false);
+    setSelectedPhoto(null);
+  }
+
+  function handleDeletePhoto(photo) {
+    console.log("Suppression de la photo:", photo);
+    
+    // TODO: Appel API pour supprimer la photo du backend
+    // await fetch(`/api/photos/${photo.id}`, { method: 'DELETE' });
+    
+    // Mettre à jour l'état local en retirant la photo des résultats
+    setResults((prevResults) => 
+      prevResults.filter((p) => p.id !== photo.id)
+    );
+    
+    console.log("Photo supprimée avec succès");
   }
 
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+                    <div className="welcome">
+                      <Tooltip text="Filtre les photos sur ta bibliotèque et/ou de ses shootings" position="right">
+                        <div className="welcomeTitle">Filtres</div>
+                      </Tooltip>
+                    </div>
+                  </div>
       <div className="leftCol">
         <ScopePicker
           libraries={MOCK_LIBRARIES}
@@ -58,47 +124,73 @@ export default function FiltersPage() {
         <div className="card">
           <div className="cardHeader">
             <div>
+              <Tooltip text="Ajoute des tags pour affiner." position="right">
               <div className="cardTitle">Tags</div>
-              <div className="cardSub">Ajoute des tags pour affiner.</div>
+              </Tooltip>
             </div>
           </div>
 
-          <div className="row">
-            <input value={tagDraft} onChange={(e) => setTagDraft(e.target.value)} placeholder="ex: mariage" />
-            <button className="btn" onClick={addTag}>Ajouter</button>
-          </div>
-
-          <div className="chipBox">
-            {tags.map((t) => (
-              <span className="chip on" key={t}>
-                {t}
-                <button className="chipX" onClick={() => setTags(tags.filter((x) => x !== t))}>×</button>
-              </span>
-            ))}
+          <div className="tagAddRow">
+            <div className="tagAddControls">
+              <input
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                placeholder="ex: portrait, mariage..."
+                onKeyDown={handleKeyDown}
+              />
+              <button className="btn tagAddBtn" onClick={addTag}>Ajouter</button>
+            </div>
+            <div className="chipBox">
+              {tags.map((t) => (
+                <span className="chip on" key={t}>
+                  {t}
+                  <button className="chipX" onClick={() => setTags(tags.filter((x) => x !== t))}>×</button>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="card">
           <div className="cardHeader">
             <div>
+              <Tooltip text="Dates, orientations, dimensions" position="right">
               <div className="cardTitle">Filtres</div>
-              <div className="cardSub">Dates, orientation, dimensions.</div>
+              </Tooltip>
             </div>
           </div>
 
           <div className="grid2">
-            <label className="field">Du <input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-            <label className="field">Au <input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} /></label>
-
             <label className="field">
-              Orientation
-              <select value={orientation} onChange={(e) => setOrientation(e.target.value)}>
-                <option value="any">Toutes</option>
-                <option value="portrait">Portrait</option>
-                <option value="landscape">Paysage</option>
-                <option value="square">Carrée</option>
-              </select>
+              Du
+              <DateTimePicker
+                value={from}
+                onChange={(date) => setFrom(date)}
+                placeholder="Sélectionner une date"
+              />
             </label>
+            <label className="field">
+              Au
+              <DateTimePicker
+                value={to}
+                onChange={(date) => setTo(date)}
+                placeholder="Sélectionner une date"
+              />
+            </label>
+
+            <div className="field">
+              <div className="fieldLabel">Orientation</div>
+              <Dropdown
+                label="Toutes"
+                items={[
+                  { value: "any", label: "Toutes" },
+                  { value: "portrait", label: "Portrait" },
+                  { value: "landscape", label: "Paysage" },
+                  { value: "square", label: "Carrée" },
+                ]}
+                onSelect={(item) => setOrientation(item.value)}
+              />
+            </div>
 
             <label className="field">Largeur max (px) <input value={maxW} onChange={(e) => setMaxW(e.target.value)} placeholder="ex: 4000" /></label>
             <label className="field">Hauteur max (px) <input value={maxH} onChange={(e) => setMaxH(e.target.value)} placeholder="ex: 3000" /></label>
@@ -106,8 +198,6 @@ export default function FiltersPage() {
 
           <button className="btn primary" onClick={run}>Appliquer</button>
         </div>
-
-        <RatingStars label="Appréciation — Filtres" onRate={(v) => console.log("rate filters", v)} />
       </div>
 
       <div className="rightCol">
@@ -119,22 +209,54 @@ export default function FiltersPage() {
           <div className="cardHeader">
             <div>
               <div className="cardTitle">Résultats</div>
-              <div className="cardSub">{results.length ? `${results.length} photo(s)` : "Aucun résultat"}</div>
+              <div className="cardSub">{results.length ? `${results.length} photo(s)` : ""}</div>
             </div>
           </div>
 
           <div className="gallery">
-            {results.map((r) => (
-              <div className="tile" key={r.id}>
-                <div className="tileImg"><img src={r.url} alt={r.caption} /></div>
-                <div className="tileMeta">
-                  <div className="tileCap">{r.caption}</div>
+            {loading ? (
+              <SkeletonCard count={8} />
+            ) : error ? (
+              <ErrorState title="Erreur de recherche" message={error} onRetry={run} />
+            ) : results.length === 0 ? (
+              <EmptyState
+                icon="🎛️"
+                title="Aucun résultat"
+                tooltip="Ajustez vos filtres pour affiner votre recherche."
+              />
+            ) : (
+              results.map((r) => (
+                <div 
+                  className="tile" 
+                  key={r.id}
+                  onClick={() => openPhotoModal(r)}
+                >
+                  <div className="tileImg"><img src={r.url} alt={r.caption} /></div>
+                  <div className="tileMeta">
+                    <div className="tileCap">{r.caption}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
+
+      {/* Rating en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Filtres"
+          onRate={(v) => console.log("rate filters", v)}
+        />
+      </div>
+
+      {/* Modal de détails photo */}
+      <PhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={closePhotoModal}
+        photo={selectedPhoto}
+        onDelete={handleDeletePhoto}
+      />
     </div>
   );
 }

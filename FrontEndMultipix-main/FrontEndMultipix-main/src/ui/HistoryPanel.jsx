@@ -1,15 +1,20 @@
+import EmptyState from "./EmptyState";
+import Tooltip from "./Tooltip";
+
 export default function HistoryPanel({ title = "Historique", items = [] }) {
   return (
     <div className="card">
       <div className="cardHeader">
-        <div>
+        <Tooltip text="Vos recherches récentes apparaîtront ici" position="left">
           <div className="cardTitle">{title}</div>
-          <div className="cardSub">Dernières actions (à brancher PostgreSQL ensuite).</div>
-        </div>
+        </Tooltip>
       </div>
 
       {items.length === 0 ? (
-        <div className="muted">Aucun historique pour l’instant.</div>
+        <EmptyState
+          icon="📜"
+          title="Aucun historique"
+        />
       ) : (
         <div className="historyList">
           {items.map((it) => (

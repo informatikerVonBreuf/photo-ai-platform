@@ -1,36 +1,39 @@
 export default function WelcomeHeader({ pathname }) {
   const map = {
     "/libraries": {
-      title: "Bibliothèques",
-      desc: "Crée et organise tes libraries, shootings et photos.",
+      /*title: "Bibliothèques",
+      desc: "Crée et organise tes libraries, shootings et photos.",*/
       badge: "Organisation",
     },
     "/search-text": {
-      title: "Recherche par texte",
-      desc: "Bienvenue ! Décris ce que tu cherches, puis lance la recherche sur une library ou des shootings.",
+      /*title: "Recherche par texte",
+      desc: "Bienvenue ! Décris ce que tu cherches, puis lance la recherche sur une library ou des shootings.",*/
       badge: "Texte",
     },
     "/search-image": {
-      title: "Recherche par image",
-      desc: "Bienvenue ! Choisis des images de référence (visage / scène), sélectionne le scope, puis lance la recherche.",
+      /*title: "Recherche par image",
+      desc: "Bienvenue ! Choisis des images de référence (visage / scène), sélectionne le scope, puis lance la recherche.",*/
       badge: "Image",
     },
     "/filters": {
-      title: "Filtres",
-      desc: "Bienvenue ! Filtre tes photos (dates, orientation, tailles, tags) sur une library ou une sélection de shootings.",
+      /*title: "Filtres",
+      desc: "Bienvenue ! Filtre tes photos (dates, orientation, tailles, tags) sur une library ou une sélection de shootings.",*/
       badge: "Filtrage",
     },
     "/clustering": {
-      title: "Clustering",
-      desc: "Bienvenue ! Regroupe automatiquement tes photos par thème. Tu verras le résultat en cartes + galerie.",
+      /*title: "Clustering",
+      desc: "Bienvenue ! Regroupe automatiquement tes photos par thème. Tu verras le résultat en cartes + galerie.",*/
       badge: "Clusters",
     },
     "/assistant": {
-      title: "Assistant IA",
-      desc: "Bienvenue ! Pose une question (ex: “résume ce shooting”, “propose une sélection”).",
+      /*title: "Assistant IA",
+      desc: "Bienvenue ! Pose une question (ex: “résume ce shooting”, “propose une sélection”).",*/
       badge: "Assistant",
-    },
-  };
+    },    "/test-components": {
+      title: "🧪 Test des Composants UI",
+      desc: "Page de test pour vérifier le bon fonctionnement des 8 composants UI réutilisables.",
+      badge: "Composants",
+    },  };
 
   const key = Object.keys(map).find((k) => pathname.startsWith(k)) || "/libraries";
   const { title, desc, badge } = map[key];

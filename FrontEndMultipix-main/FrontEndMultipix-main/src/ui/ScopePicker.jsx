@@ -1,4 +1,7 @@
 import { useMemo } from "react";
+import Tooltip from "./Tooltip";
+import Dropdown from "../components/Dropdown";
+import "../styles/dropdown.css";
 
 export default function ScopePicker({
   libraries = [],
@@ -29,29 +32,31 @@ export default function ScopePicker({
   return (
     <div className="card">
       <div className="cardHeader">
-        <div>
-          <div className="cardTitle">Scope</div>
-          <div className="cardSub">Choisis une library ou sélectionne des shootings.</div>
-        </div>
-      </div>
+      <Tooltip text="Choisis une bibliothèque et/ou sélectionne ses shootings" position="right">
+    <div className="cardTitle">Où chercher ?</div>
+      </Tooltip>
+    </div>
 
       <div className="grid2">
-        <label className="field">
-          Library
-          <select value={libraryId || ""} onChange={(e) => setLibraryId(e.target.value || null)}>
-            <option value="">— choisir —</option>
-            {libraries.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="field">
+          <div className="fieldLabel">Bibliothèque</div>
+          <Dropdown
+            label="Choisis une bibliothèque"
+            items={libraries.map((l) => ({
+              value: l.id,
+              label: l.name,
+            }))}
+            onSelect={(item) => setLibraryId(item.value)}
+          />
+        </div>
 
         <div className="field">
+          <Tooltip text="Si aucun shooting n’est sélectionné, la recherche s’applique à toute la bibliothèque." position="left">
           <div className="fieldLabel">Shootings (optionnel)</div>
+                </Tooltip>
+
           <div className="chipBox">
-            {currentShootings.length === 0 && <div className="mutedSmall">Sélectionne une library.</div>}
+            {currentShootings.length === 0 && <div className="mutedSmall">Sélectionne une bibliothèque.</div>}
             {currentShootings.map((s) => (
               <button
                 key={s.id}
@@ -62,13 +67,11 @@ export default function ScopePicker({
                 {s.name}
               </button>
             ))}
-          </div>
+          </div> 
         </div>
       </div>
 
-      <div className="mutedSmall">
-        Si aucun shooting n’est sélectionné, la recherche s’applique à toute la library.
-      </div>
+      
     </div>
   );
 }

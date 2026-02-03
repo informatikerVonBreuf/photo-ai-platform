@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
+import SkeletonCard from "../ui/SkeletonCard";
+import EmptyState from "../ui/EmptyState";
+import ErrorState from "../ui/ErrorState";
+import Tooltip from "../ui/Tooltip";
+import PhotoModal from "../ui/PhotoModal";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -15,32 +20,123 @@ const MOCK_SHOOTINGS = [
 ];
 
 export default function TextSearchPage() {
-  const [libraryId, setLibraryId] = useState("lib1");
+  const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   const canRun = useMemo(() => Boolean(libraryId) && query.trim().length > 0, [libraryId, query]);
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && canRun && !loading) {
+      run();
+    }
+  }
 
   async function run() {
     if (!canRun) return;
     setLoading(true);
+    setError(null);
 
-    // TODO: appeler ton backend /search-text avec scope + query
-    // Ici: mock results
-    await new Promise((r) => setTimeout(r, 500));
-    setResults([
-      { id: "p1", url: "https://picsum.photos/600/400?1", caption: "Photo de groupe", score: 0.91 },
-      { id: "p2", url: "https://picsum.photos/600/400?2", caption: "Cérémonie", score: 0.87 },
-      { id: "p3", url: "https://picsum.photos/600/400?3", caption: "Danse", score: 0.82 },
-    ]);
+    try {
+      // Simulation d'erreur aléatoire (1 chance sur 3)
+      if (Math.random() < 0.33) {
+        throw new Error("Erreur de connexion au serveur");
+      }
 
-    setLoading(false);
+      // TODO: appeler ton backend /search-text avec scope + query
+      // Ici: mock results
+      await new Promise((r) => setTimeout(r, 500));
+      setResults([
+        { 
+          id: "p1", 
+          url: "https://picsum.photos/600/400?1", 
+          caption: "Photo de groupe",
+          name: "IMG_20260115_124530.jpg",
+          date: "15 janvier 2026",
+          dimensions: "4000 × 3000 px",
+          size: "2.4 MB",
+          format: "JPEG",
+          library: "Mariages 2024",
+          shooting: "Mariage — Marie & Rochinel",
+          tags: ["portrait", "groupe", "extérieur"],
+          score: 0.91 
+        },
+        { 
+          id: "p2", 
+          url: "https://picsum.photos/600/400?2", 
+          caption: "Cérémonie",
+          name: "IMG_20260115_140000.jpg",
+          date: "15 janvier 2026",
+          dimensions: "3840 × 2560 px",
+          size: "1.8 MB",
+          format: "JPEG",
+          library: "Mariages 2024",
+          shooting: "Mariage — Marie & Rochinel",
+          tags: ["cérémonie", "intérieur"],
+          score: 0.87 
+        },
+        { 
+          id: "p3", 
+          url: "https://picsum.photos/600/400?3", 
+          caption: "Danse",
+          name: "IMG_20260115_185000.jpg",
+          date: "15 janvier 2026",
+          dimensions: "4000 × 3000 px",
+          size: "2.2 MB",
+          format: "JPEG",
+          library: "Mariages 2024",
+          shooting: "Mariage — Marie & Rochinel",
+          tags: ["danse", "soirée", "ambiance"],
+          score: 0.82 
+        },
+      ]);
+    } catch (err) {
+      setError(err.message || "Erreur inconnue");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openPhotoModal(photo) {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  }
+
+  function closePhotoModal() {
+    setIsPhotoModalOpen(false);
+    setSelectedPhoto(null);
+  }
+
+  function handleDeletePhoto(photo) {
+    console.log("Suppression de la photo:", photo);
+    
+    // TODO: Appel API pour supprimer la photo du backend
+    // await fetch(`/api/photos/${photo.id}`, { method: 'DELETE' });
+    
+    // Mettre à jour l'état local en retirant la photo des résultats
+    setResults((prevResults) => 
+      prevResults.filter((p) => p.id !== photo.id)
+    );
+    
+    console.log("Photo supprimée avec succès");
   }
 
   return (
     <div className="pageGrid">
+      <div className="fullRow">
+        <div className="welcome">
+          <Tooltip text="Décris ce que tu cherches, puis sélectionne une bibliothèque et ses shootings pour lancer la recherche" position="right">
+            <div className="welcomeTitle">Recherche par texte</div>
+          </Tooltip>
+        </div>
+      </div>
+
       <div className="leftCol">
         <ScopePicker
           libraries={MOCK_LIBRARIES}
@@ -52,31 +148,30 @@ export default function TextSearchPage() {
         />
 
         <div className="card">
-          <div className="cardHeader">
-            <div>
-              <div className="cardTitle">Votre requête</div>
-              <div className="cardSub">Décris ce que tu veux trouver (ex: “photos de groupe”).</div>
-            </div>
-          </div>
 
           <label className="field">
-            Requête texte
+            <div style={{ fontStyle: "italic" }}>Décris ce que tu cherches </div>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="ex: photos de groupe, cérémonie, danse…"
             />
           </label>
 
           <button className="btn primary" disabled={!canRun || loading} onClick={run}>
-            {loading ? "Recherche..." : "Lancer la recherche"}
+            {loading ? (
+              <>
+                <span className="btnSpinner" />
+                Recherche...
+              </>
+            ) : (
+              <>
+                🔍 Lancer la recherche
+              </>
+            )}
           </button>
         </div>
-
-        <RatingStars
-          label="Appréciation — Recherche texte"
-          onRate={(v) => console.log("rate text search", v)}
-        />
       </div>
 
       <div className="rightCol">
@@ -92,7 +187,7 @@ export default function TextSearchPage() {
             <div>
               <div className="cardTitle">Résultats</div>
               <div className="cardSub">
-                {results.length ? `${results.length} photo(s)` : "Aucun résultat"}
+                {results.length ? `${results.length} photo(s)` : ""}
               </div>
             </div>
             <button className="btn" disabled={!results.length}>
@@ -101,22 +196,56 @@ export default function TextSearchPage() {
           </div>
 
           <div className="gallery">
-            {results.map((r) => (
-              <div className="tile" key={r.id}>
-                <div className="tileImg">
-                  <img src={r.url} alt={r.caption} />
+            {loading ? (
+              <SkeletonCard count={8} />
+            ) : error ? (
+              <ErrorState
+                title="Erreur de recherche"
+                message={error}
+                onRetry={run}
+              />
+            ) : results.length === 0 ? (
+              <EmptyState
+                icon="🔍"
+                title="Aucun résultat"
+                tooltip="Essayez une autre requête ou ajustez votre sélection de bibliothèque"
+              />
+            ) : (
+              results.map((r) => (
+                <div 
+                  className="tile" 
+                  key={r.id}
+                  onClick={() => openPhotoModal(r)}
+                >
+                  <div className="tileImg">
+                    <img src={r.url} alt={r.caption} />
+                  </div>
+                  <div className="tileMeta">
+                    <div className="tileCap">{r.caption}</div>
+                    <div className="tileSub">score: {r.score}</div>
+                  </div>
                 </div>
-                <div className="tileMeta">
-                  <div className="tileCap">{r.caption}</div>
-                  <div className="tileSub">score: {r.score}</div>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-
-          {loading && <div className="muted">Chargement…</div>}
         </div>
       </div>
+
+      {/* Rating en bas */}
+      <div className="fullRow">
+        <RatingStars 
+          featureName="Recherche texte"
+          onRate={(v) => console.log("rate text search", v)} 
+        />
+      </div>
+
+      {/* Modal de détails photo */}
+      <PhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={closePhotoModal}
+        photo={selectedPhoto}
+        onDelete={handleDeletePhoto}
+      />
     </div>
   );
 }
