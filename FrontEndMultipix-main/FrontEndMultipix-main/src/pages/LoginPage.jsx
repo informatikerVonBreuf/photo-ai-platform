@@ -10,7 +10,7 @@ export default function LoginPage() {
     e.preventDefault();
     localStorage.setItem("mpx_token", "dev-token");
     localStorage.setItem("mpx_user", JSON.stringify({ email }));
-    nav("/libraries");
+    nav("/app/libraries");
   }
 
   return (

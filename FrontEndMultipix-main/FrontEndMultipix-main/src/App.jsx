@@ -42,17 +42,18 @@ export default function App() {
       <BackgroundScene modelPath={bgModel === "none" ? null : bgModel} />
       <div className="app-content">
     <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
 
       <Route
-        path="/"
+        path="/app"
         element={
           <RequireAuth>
             <DashboardLayout bgModel={bgModel} onChangeBgModel={setBgModel} bgModelOptions={BG_MODELS} />
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="/libraries" replace />} />
+        <Route index element={<Navigate to="/app/libraries" replace />} />
         <Route path="libraries" element={<LibrariesPage />} />
         <Route path="search-text" element={<TextSearchPage />} />
         <Route path="search-image" element={<ImageSearchPage />} />
@@ -61,7 +62,7 @@ export default function App() {
         <Route path="assistant" element={<AssistantPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
     </div>
     </div>

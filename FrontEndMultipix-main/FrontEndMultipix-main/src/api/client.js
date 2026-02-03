@@ -152,6 +152,28 @@ export async function askAssistant(message) {
 }
 
 /** =========================================================
+ * RATING / FEEDBACK
+ * ========================================================= */
+export async function submitRatingComment({ featureName, rating, comment }) {
+  const payload = {
+    feature: featureName,
+    rating,
+    comment,
+  };
+
+  if (USE_MOCK) {
+    console.log("submitRatingComment mock", payload);
+    return { ok: true };
+  }
+
+  return await request("/ratings", {
+    method: "POST",
+    body: payload,
+    timeoutMs: 30000,
+  });
+}
+
+/** =========================================================
  * SHOOTINGS
  * ========================================================= */
 export async function listShootings() {
