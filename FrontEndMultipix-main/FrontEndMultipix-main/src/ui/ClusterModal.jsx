@@ -7,6 +7,7 @@ export default function ClusterModal({
   cluster,
   onDownload,
   isDownloading,
+  onSaveShooting,
 }) {
   if (!cluster) return null;
 
@@ -46,6 +47,17 @@ export default function ClusterModal({
               ) : null}
             </div>
           ))}
+        </div>
+
+        <div className="clusterModalActions">
+          <button
+            className="btn primary"
+            type="button"
+            onClick={onSaveShooting}
+            disabled={photos.length === 0}
+          >
+            Enregistrer le shooting
+          </button>
         </div>
       </div>
     </Modal>

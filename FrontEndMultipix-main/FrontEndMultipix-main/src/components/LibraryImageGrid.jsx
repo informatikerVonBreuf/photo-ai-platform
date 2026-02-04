@@ -55,7 +55,7 @@ export default function LibraryImageGrid({
     return (
       <EmptyState
         icon="🖼️"
-        title="Aucune image dans cette bibliothèque pour le moment"
+        title="Aucune image dans cet album pour le moment"
         tooltip="Importez des images pour les afficher ici."
       />
     );

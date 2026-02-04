@@ -325,7 +325,7 @@ export default function LibrariesPage() {
       {/* Welcome section */}
       <div className="fullRow">
         <div className="welcome">
-          <Tooltip text="Crée et organise les bibliothèques, shootings et photos" position="right">
+          <Tooltip text="Crée et organise tes albums, shootings et photos" position="right">
             <div className="welcomeTitle">Bibliothèques</div>
           </Tooltip>
         </div>
@@ -335,8 +335,8 @@ export default function LibrariesPage() {
       <div className="leftCol">
         <div className="card">
           <div className="cardHeader">
-            <Tooltip text="Organise tes shootings par bibliothèque(s)" position="right">
-              <div className="cardTitle">Créer une bibliothèque</div>
+            <Tooltip text="Crée un album afin d’y importer les shootings sélectionnés depuis tes recherches." position="right">
+              <div className="cardTitle">Créer un album</div>
             </Tooltip>
           </div>
 
@@ -439,10 +439,10 @@ export default function LibrariesPage() {
 
       {/* Right column */}
       <div className="rightCol">
-        <HistoryPanel title="Historique — Bibliothèques" items={[]} />
+        <HistoryPanel title="Historique — Bibliothèque" items={[]} />
       </div>
 
-      {/* Mes bibliothèques */}
+      {/* Mes albums */}
       <div className="fullRow">
         <div className="card">
           <div className="cardHeader">
@@ -485,7 +485,7 @@ export default function LibrariesPage() {
         <div className="card">
           <div className="cardHeader">
             <div>
-              <div className="cardTitle">Mes bibliothèques</div>
+              <div className="cardTitle">Mes albums</div>
               <div className="cardSub">{libraries.length} bibliothèque(s)</div>
             </div>
           </div>

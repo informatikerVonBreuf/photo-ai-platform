@@ -32,16 +32,16 @@ export default function ScopePicker({
   return (
     <div className="card">
       <div className="cardHeader">
-      <Tooltip text="Choisis une bibliothèque et/ou sélectionne ses shootings" position="right">
+      <Tooltip text="Choisis un album et/ou sélectionne ses shootings" position="right">
     <div className="cardTitle">Où chercher ?</div>
       </Tooltip>
     </div>
 
       <div className="grid2">
         <div className="field">
-          <div className="fieldLabel">Bibliothèque</div>
+          <div className="fieldLabel">Album</div>
           <Dropdown
-            label="Choisis une bibliothèque"
+            label="Choisis ton album"
             items={libraries.map((l) => ({
               value: l.id,
               label: l.name,
@@ -51,12 +51,12 @@ export default function ScopePicker({
         </div>
 
         <div className="field">
-          <Tooltip text="Si aucun shooting n’est sélectionné, la recherche s’applique à toute la bibliothèque." position="left">
+              <Tooltip text="Si aucun shooting n'est sélectionné, la recherche s'applique à tout l'album." position="left">
           <div className="fieldLabel">Shootings (optionnel)</div>
                 </Tooltip>
 
           <div className="chipBox">
-            {currentShootings.length === 0 && <div className="mutedSmall">Sélectionne une bibliothèque.</div>}
+            {currentShootings.length === 0 && <div className="mutedSmall">Sélectionne ton album.</div>}
             {currentShootings.map((s) => (
               <button
                 key={s.id}

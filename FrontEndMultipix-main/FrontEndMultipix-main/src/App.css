@@ -459,6 +459,46 @@ a:hover {
   font-size:12px;
 }
 
+.albumModeRow{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.albumModeOption{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.albumModeDot{
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.06);
+  position: relative;
+}
+
+.albumModeDot.active{
+  border-color: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,.2));
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.shootingModalBody .albumModeOption,
+.shootingModalBody .dd-label,
+.shootingModalBody input {
+  font-family: "Space Grotesk", var(--font-body);
+}
+
 /* Cards */
 .card{
   border:30px solid var(--stroke-soft);
@@ -1007,7 +1047,7 @@ input:focus,select:focus{
   border:1px solid rgba(255,255,255,.12);
   background: rgba(0,0,0,.2);
   color: var(--text);
-  font-family: var(--font-body);
+  font-family: "Space Grotesk", var(--font-body);
 }
 .ratingCommentInput::placeholder{ color: var(--muted); }
 .ratingCommentSend{
@@ -1017,6 +1057,7 @@ input:focus,select:focus{
   font-weight: 700;
   cursor:pointer;
   color: var(--text);
+  font-family: "Space Grotesk", var(--font-body);
   background: color-mix(in srgb, var(--accent) 30%, rgba(0,0,0,.2));
   transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
@@ -1582,6 +1623,12 @@ input:focus, select:focus {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
+}
+
+.clusterModalActions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top:16px;
 }
 
 .clusterModalTile {

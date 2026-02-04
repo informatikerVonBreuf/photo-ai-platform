@@ -10,6 +10,8 @@ import Tooltip from "../ui/Tooltip";
 import PhotoModal from "../ui/PhotoModal";
 import Dropdown from "../components/Dropdown";
 import DateTimePicker from "../components/DateTimePicker";
+import { downloadClusterImages } from "../utils/downloadClusterImages";
+import Modal from "../ui/Modal";
 import "../styles/dropdown.css";
 
 const MOCK_LIBRARIES = [
@@ -41,6 +43,15 @@ export default function FiltersPage() {
   const [error, setError] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [saveAlbumId, setSaveAlbumId] = useState("");
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [albumMode, setAlbumMode] = useState("select");
+  const [newAlbumName, setNewAlbumName] = useState("");
+  const [newAlbumDesc, setNewAlbumDesc] = useState("");
+  const [shootingName, setShootingName] = useState("");
+  const [shootingDesc, setShootingDesc] = useState("");
+  const [albumError, setAlbumError] = useState("");
+  const [shootingError, setShootingError] = useState("");
 
   // Validation UX: calcule l'état global du formulaire pour activer/désactiver "Appliquer".
   const hasSelectedLibrary = Boolean(libraryId);
@@ -137,12 +148,54 @@ export default function FiltersPage() {
     console.log("Photo supprimée avec succès");
   }
 
+  function openSaveModal() {
+    setAlbumMode("select");
+    setAlbumError("");
+    setShootingError("");
+    setIsSaveModalOpen(true);
+  }
+
+  function closeSaveModal() {
+    setIsSaveModalOpen(false);
+    setAlbumMode("select");
+    setSaveAlbumId("");
+    setNewAlbumName("");
+    setNewAlbumDesc("");
+    setShootingName("");
+    setShootingDesc("");
+    setAlbumError("");
+    setShootingError("");
+  }
+
+  function handleSaveShooting() {
+    if (albumMode === "select" && !saveAlbumId) {
+      setAlbumError("Choisis un album.");
+      return;
+    }
+    if (albumMode === "create" && !newAlbumName.trim()) {
+      setAlbumError("Choisis un album ou crée-en un.");
+      return;
+    }
+    if (!shootingName.trim()) {
+      setShootingError("Le nom du shooting est obligatoire.");
+      return;
+    }
+    setAlbumError("");
+    setShootingError("");
+    closeSaveModal();
+  }
+
+  async function handleDownloadResults() {
+    if (!results.length) return;
+    await downloadClusterImages({ theme: "resultats-filtres-avances", photos: results });
+  }
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
                     <div className="welcome">
                       <Tooltip text="Filtre les photos sur ta bibliotèque et/ou de ses shootings" position="right">
-                        <div className="welcomeTitle">Filtres</div>
+                        <div className="welcomeTitle">Filtres avancés</div>
                       </Tooltip>
                     </div>
                   </div>
@@ -267,7 +320,7 @@ export default function FiltersPage() {
       </div>
 
       <div className="rightCol">
-        <HistoryPanel title="Historique — Filtres" items={[]} />
+        <HistoryPanel title="Historique — Filtres avancés" items={[]} />
       </div>
 
       <div className="fullRow">
@@ -277,6 +330,9 @@ export default function FiltersPage() {
               <div className="cardTitle">Résultats</div>
               <div className="cardSub">{results.length ? `${results.length} photo(s)` : ""}</div>
             </div>
+            <button className="btn" disabled={!results.length} onClick={handleDownloadResults}>
+              Télécharger
+            </button>
           </div>
 
           <div className="gallery">
@@ -308,6 +364,26 @@ export default function FiltersPage() {
         </div>
       </div>
 
+      {results.length > 0 && (
+        <div className="fullRow">
+          <div className="card">
+            <div className="cardHeader">
+              <div>
+                <div className="cardSub">Associer ces résultats à un album</div>
+              </div>
+            </div>
+
+            <button
+              className="btn primary"
+              onClick={openSaveModal}
+              disabled={results.length === 0}
+            >
+              Enregistrer le shooting
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Rating en bas */}
       <div className="fullRow">
         <RatingStars 
@@ -323,6 +399,113 @@ export default function FiltersPage() {
         photo={selectedPhoto}
         onDelete={handleDeletePhoto}
       />
+
+      <Modal
+        isOpen={isSaveModalOpen}
+        onClose={closeSaveModal}
+        title="Nouveau shooting"
+        bodyClassName="shootingModalBody"
+      >
+        <div className="albumModeRow">
+          <button
+            type="button"
+            className="albumModeOption"
+            onClick={() => {
+              setAlbumMode("select");
+              setAlbumError("");
+              setNewAlbumName("");
+              setNewAlbumDesc("");
+            }}
+          >
+            <span className={`albumModeDot ${albumMode === "select" ? "active" : ""}`} />
+            <span> Sélectionner un album</span>
+          </button>
+
+          <button
+            type="button"
+            className="albumModeOption"
+            onClick={() => {
+              setAlbumMode("create");
+              setAlbumError("");
+              setSaveAlbumId("");
+            }}
+          >
+            <span className={`albumModeDot ${albumMode === "create" ? "active" : ""}`} />
+            <span> Créer un album</span>
+          </button>
+        </div>
+
+        {albumMode === "select" ? (
+          <div className="field">
+            <Dropdown
+              label="Choisis un album"
+              className="dd-compact"
+              items={MOCK_LIBRARIES.map((lib) => ({
+                value: lib.id,
+                label: lib.name,
+              }))}
+              onSelect={(item) => setSaveAlbumId(item.value)}
+            />
+            <FieldError message={albumError} />
+          </div>
+        ) : (
+          <>
+            <div className="field">
+              <input
+                value={newAlbumName}
+                onChange={(e) => setNewAlbumName(e.target.value)}
+                placeholder="Nom de l’album"
+              />
+              <FieldError message={albumError} />
+            </div>
+
+            <div className="field">
+              <input
+                value={newAlbumDesc}
+                onChange={(e) => setNewAlbumDesc(e.target.value)}
+                placeholder="Description de l’album"
+              />
+            </div>
+          </>
+        )}
+
+        <div className="dropdownDivider" style={{ margin: "16px 0" }} />
+
+        <label className="field">
+          Nom du shooting
+          <input
+            value={shootingName}
+            onChange={(e) => setShootingName(e.target.value)}
+            placeholder="ex: Mariage — Marie & Rochinel"
+          />
+          <FieldError message={shootingError} />
+        </label>
+
+        <label className="field">
+          Description
+          <input
+            value={shootingDesc}
+            onChange={(e) => setShootingDesc(e.target.value)}
+            placeholder="ex: Cérémonie + soirée"
+          />
+        </label>
+
+        <div className="modalActions">
+          <button className="btn" onClick={closeSaveModal}>
+            Annuler
+          </button>
+          <button
+            className="btn primary"
+            onClick={handleSaveShooting}
+            disabled={
+              !shootingName.trim() ||
+              (albumMode === "select" ? !saveAlbumId : !newAlbumName.trim())
+            }
+          >
+            Enregistrer
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -12,11 +12,11 @@ import {
 } from "@phosphor-icons/react";
 
 const NAV = [
-  { to: "/app/libraries", label: "Bibliothèques", icon: <Books size={18} />, tone: "tone-libraries", color: "#80a4ff" },
+  { to: "/app/libraries", label: "Bibliothèque", icon: <Books size={18} />, tone: "tone-libraries", color: "#80a4ff" },
   { to: "/app/search-text", label: "Recherche texte", icon: <MagnifyingGlass size={18} />, tone: "tone-text", color: "#ff8686" },
   { to: "/app/search-image", label: "Recherche image", icon: <Image size={18} />, tone: "tone-image", color: "#b0ffbd" },
-  { to: "/app/filters", label: "Filtres", icon: <Sliders size={18} />, tone: "tone-filters", color: "#83e4ff" },
-  { to: "/app/clustering", label: "Clustering", icon: <GridFour size={18} />, tone: "tone-cluster", color: "#fff67a" },
+  { to: "/app/filters", label: "Filtres avancés", icon: <Sliders size={18} />, tone: "tone-filters", color: "#83e4ff" },
+  { to: "/app/clustering", label: "Tri automatique", icon: <GridFour size={18} />, tone: "tone-cluster", color: "#fff67a" },
   { to: "/app/assistant", label: "Assistant IA", icon: <Robot size={18} />, tone: "tone-assistant", color: "#ea8aff" },
 ];
 
