@@ -44,7 +44,12 @@ export default function PhotoModal({ isOpen, onClose, photo, onDelete }) {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Détails de la photo">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Détails de la photo"
+        overlayClassName="photoModalOverlay"
+      >
       <div className="photoModalContent">
         {/* Image principale */}
         <div className="photoModalImageWrapper">

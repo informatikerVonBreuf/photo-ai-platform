@@ -493,6 +493,52 @@ a:hover {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
+.albumBadgeRow{
+  display:flex;
+  flex-wrap: wrap;
+  gap:8px;
+  margin: 0 0 12px 0;
+}
+
+.albumBadge{
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.albumBadge--active{
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.2));
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+
+.albumBadgeDelete{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted);
+  background: rgba(255,255,255,.08);
+}
+
+.albumBadgeDelete:hover{
+  color: var(--text);
+  background: rgba(255,255,255,.16);
+}
+
 .shootingModalBody .albumModeOption,
 .shootingModalBody .dd-label,
 .shootingModalBody input {
@@ -897,6 +943,9 @@ input:focus,select:focus{
 .libraryGallery{
   grid-template-columns: repeat(8, minmax(0, 1fr));
 }
+.libraryGallery .tile{
+  animation: tileFadeIn 180ms ease-out;
+}
 .tile{
   border-radius: 18px;
   overflow:hidden;
@@ -908,6 +957,17 @@ input:focus,select:focus{
 .tileMeta{ padding:10px; }
 .tileCap{ font-weight:700; font-size:13px; }
 .tileSub{ color:var(--muted); font-size:12px; margin-top:4px; }
+
+@keyframes tileFadeIn{
+  from{
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
 /* Clusters */
 .clusterGrid{
@@ -1074,6 +1134,13 @@ input:focus,select:focus{
   border-radius: 14px;
   border:1px solid rgba(255,255,255,.08);
   background: rgba(0,0,0,.16);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.historyItem:hover{
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  border-color: rgba(255,255,255,.18);
+  transform: translateY(-1px);
 }
 .historyMain{ font-weight:800; font-size:14px; }
 .historySub{ color:var(--muted); font-size:12px; margin-top:4px; }
@@ -1435,6 +1502,10 @@ input:focus, select:focus {
   z-index: 2000;
   padding: 24px;
   animation: modalFadeIn 0.2s ease;
+}
+
+.modalOverlay.photoModalOverlay {
+  z-index: 2600;
 }
 
 .modalContent {

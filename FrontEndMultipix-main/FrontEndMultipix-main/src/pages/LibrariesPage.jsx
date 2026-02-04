@@ -16,6 +16,7 @@ export default function LibrariesPage() {
     { id: "lib1", name: "Mariages 2024", desc: "Clients & cérémonies", images: [] },
     { id: "lib2", name: "Portraits Studio", desc: "Portraits pro", images: [] },
   ]);
+  const [albumShootingFilter, setAlbumShootingFilter] = useState("all");
 
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -33,6 +34,10 @@ export default function LibrariesPage() {
     isOpen: false,
     photo: null
   });
+  const [openShootingModal, setOpenShootingModal] = useState({
+    isOpen: false,
+    shooting: null
+  });
   const [droppedFiles, setDroppedFiles] = useState([]);
   const [isDragActive, setIsDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -42,6 +47,39 @@ export default function LibrariesPage() {
   const directoryInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const modalImageInputRef = useRef(null);
+
+  const [mockShootings, setMockShootings] = useState([
+    {
+      id: "sh1",
+      name: "Mariage — Marie & Rochinel",
+      album: "Mariages 2024",
+      images: [
+        { id: "sh1-1", url: "https://picsum.photos/600/400?101", name: "Photo 1" },
+        { id: "sh1-2", url: "https://picsum.photos/600/400?102", name: "Photo 2" },
+        { id: "sh1-3", url: "https://picsum.photos/600/400?103", name: "Photo 3" },
+      ],
+    },
+    {
+      id: "sh2",
+      name: "Cérémonie — Église",
+      album: "Mariages 2024",
+      images: [
+        { id: "sh2-1", url: "https://picsum.photos/600/400?104", name: "Photo 1" },
+        { id: "sh2-2", url: "https://picsum.photos/600/400?105", name: "Photo 2" },
+      ],
+    },
+    {
+      id: "sh3",
+      name: "Portrait — Corporate",
+      album: "Portraits Studio",
+      images: [
+        { id: "sh3-1", url: "https://picsum.photos/600/400?106", name: "Photo 1" },
+        { id: "sh3-2", url: "https://picsum.photos/600/400?107", name: "Photo 2" },
+        { id: "sh3-3", url: "https://picsum.photos/600/400?108", name: "Photo 3" },
+        { id: "sh3-4", url: "https://picsum.photos/600/400?109", name: "Photo 4" },
+      ],
+    },
+  ]);
 
   const IMAGE_EXTENSIONS = new Set([
     "jpg",
@@ -295,6 +333,7 @@ export default function LibrariesPage() {
       isOpen: true,
       libraryId: library.id
     });
+    setAlbumShootingFilter("all");
   }
 
   function closeLibraryModal() {
@@ -318,7 +357,74 @@ export default function LibrariesPage() {
     });
   }
 
+  function handleDeletePhoto(photo) {
+    if (!photo) return;
+
+    const photoKey = photo.id || photo.url;
+
+    if (photo.library === "Dépôt d'images") {
+      setLibraryImages((prev) => prev.filter((img) => (img.id || img.url) !== photoKey));
+    }
+
+    if (photo.library) {
+      setLibraries((prev) =>
+        prev.map((lib) =>
+          lib.name === photo.library
+            ? {
+                ...lib,
+                images: (lib.images || []).filter(
+                  (img) => (img.id || img.url) !== photoKey
+                ),
+              }
+            : lib
+        )
+      );
+    }
+
+    setMockShootings((prev) =>
+      prev.map((shooting) =>
+        !photo.shooting || shooting.name === photo.shooting
+          ? {
+              ...shooting,
+              images: (shooting.images || []).filter(
+                (img) => (img.id || img.url) !== photoKey
+              ),
+            }
+          : shooting
+      )
+    );
+
+    closePhotoDetails();
+  }
+
+  function openShooting(shooting) {
+    setOpenShootingModal({
+      isOpen: true,
+      shooting
+    });
+  }
+
+  function closeShootingModal() {
+    setOpenShootingModal({
+      isOpen: false,
+      shooting: null
+    });
+  }
+
+  function deleteShooting(shootingId) {
+    setMockShootings((prev) => prev.filter((s) => s.id !== shootingId));
+    setAlbumShootingFilter((prev) => (prev === shootingId ? "all" : prev));
+  }
+
   const modalLibrary = libraries.find((lib) => lib.id === openLibraryModal.libraryId) || null;
+  const modalShootings = mockShootings.filter(
+    (shooting) => shooting.album === modalLibrary?.name
+  );
+  const allShootingImages = modalShootings.flatMap((s) => s.images || []);
+  const modalShootingImages =
+    albumShootingFilter === "all"
+      ? (modalLibrary?.images?.length ? modalLibrary.images : allShootingImages)
+      : modalShootings.find((s) => s.id === albumShootingFilter)?.images || [];
 
   return (
     <div className="pageGrid">
@@ -486,7 +592,7 @@ export default function LibrariesPage() {
           <div className="cardHeader">
             <div>
               <div className="cardTitle">Mes albums</div>
-              <div className="cardSub">{libraries.length} bibliothèque(s)</div>
+              <div className="cardSub">{libraries.length} album(s)</div>
             </div>
           </div>
 
@@ -507,6 +613,29 @@ export default function LibrariesPage() {
                 <button className="btn" onClick={() => openLibrary(l)}>
                   Ouvrir
                 </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="dropdownDivider" style={{ margin: "18px 0" }} />
+
+          <div className="cardTitle" style={{ marginBottom: "10px" }}>
+            Mes shootings
+          </div>
+
+          <div className="historyList">
+            {mockShootings.map((shooting) => (
+              <div
+                className="historyItem"
+                key={shooting.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => openShooting(shooting)}
+              >
+                <span>{shooting.name}</span>
+                <span className="mutedSmall" style={{ fontStyle: "italic" }}>
+                  {shooting.album ? ` — ${shooting.album}` : ""}
+                </span>
               </div>
             ))}
           </div>
@@ -588,15 +717,49 @@ export default function LibrariesPage() {
             />
           </div>
         </div>
+          <div className="albumBadgeRow">
+            <button
+              type="button"
+              className={`albumBadge ${albumShootingFilter === "all" ? "albumBadge--active" : ""}`}
+              onClick={() => setAlbumShootingFilter("all")}
+            >
+              Tout
+            </button>
+            {modalShootings.map((shooting) => (
+              <button
+                key={shooting.id}
+                type="button"
+                className={`albumBadge ${albumShootingFilter === shooting.id ? "albumBadge--active" : ""}`}
+                onClick={() => setAlbumShootingFilter(shooting.id)}
+              >
+                <span className="albumBadgeLabel">{shooting.name}</span>
+                <span
+                  className="albumBadgeDelete"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteShooting(shooting.id);
+                  }}
+                >
+                  ×
+                </span>
+              </button>
+            ))}
+          </div>
 
         <LibraryImageGrid
-          images={modalLibrary?.images || []}
+            images={modalShootingImages}
           pageSize={48}
           loading={false}
-          resetKey={modalLibrary?.id || "library-modal"}
+            resetKey={`${modalLibrary?.id || "library-modal"}-${albumShootingFilter}`}
           onOpen={(photo) =>
             openPhotoDetails({
               ...photo,
+              shooting:
+                albumShootingFilter !== "all"
+                  ? modalShootings.find((s) => s.id === albumShootingFilter)?.name
+                  : photo.shooting,
               library: modalLibrary?.name || photo.library
             })
           }
@@ -607,7 +770,29 @@ export default function LibrariesPage() {
         isOpen={photoModal.isOpen}
         onClose={closePhotoDetails}
         photo={photoModal.photo}
+        onDelete={handleDeletePhoto}
       />
+
+      <Modal
+        isOpen={openShootingModal.isOpen}
+        onClose={closeShootingModal}
+        title={openShootingModal.shooting?.name || "Shooting"}
+        contentClassName="modalWide"
+      >
+        <LibraryImageGrid
+          images={openShootingModal.shooting?.images || []}
+          pageSize={48}
+          loading={false}
+          resetKey={openShootingModal.shooting?.id || "shooting-modal"}
+          onOpen={(photo) =>
+            openPhotoDetails({
+              ...photo,
+              shooting: openShootingModal.shooting?.name,
+              library: openShootingModal.shooting?.album,
+            })
+          }
+        />
+      </Modal>
     </div>
   );
 }
