@@ -1410,6 +1410,11 @@ input:focus, select:focus {
   animation: modalSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.modalContent.modalWide {
+  max-width: 1100px;
+  width: min(1100px, 100%);
+}
+
 .modalHeader {
   display: flex;
   justify-content: space-between;

@@ -6,6 +6,7 @@ export default function LibraryImageGrid({
   images = [],
   pageSize = 36,
   loading = false,
+  onOpen,
   resetKey,
 }) {
   const [page, setPage] = useState(1);
@@ -66,15 +67,18 @@ export default function LibraryImageGrid({
         {visibleImages.map((img) => {
           const src = img.url || objectUrlMap[img.id];
           const alt = img.name || img.caption || "Image";
+          const photoForModal = src ? { ...img, url: src } : img;
 
           return (
-            <div className="tile" key={img.id || img.url}>
+            <div
+              className="tile"
+              key={img.id || img.url}
+              role={onOpen ? "button" : undefined}
+              tabIndex={onOpen ? 0 : undefined}
+              onClick={() => onOpen?.(photoForModal)}
+            >
               <div className="tileImg">
                 {src ? <img src={src} alt={alt} /> : null}
-              </div>
-              <div className="tileMeta">
-                <div className="tileCap">{alt}</div>
-                {img.meta ? <div className="tileSub">{img.meta}</div> : null}
               </div>
             </div>
           );

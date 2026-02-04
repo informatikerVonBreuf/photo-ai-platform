@@ -6,14 +6,15 @@ import useToast from "../hooks/useToast";
 import FieldError from "../ui/FieldError";
 import Tooltip from "../ui/Tooltip";
 import Modal from "../ui/Modal";
+import PhotoModal from "../ui/PhotoModal";
 import { uploadImages } from "../api/client";
 import LibraryImageGrid from "../components/LibraryImageGrid";
 
 export default function LibrariesPage() {
   const { toasts, addToast, ToastContainer } = useToast();
   const [libraries, setLibraries] = useState([
-    { id: "lib1", name: "Mariages 2024", desc: "Clients & cérémonies" },
-    { id: "lib2", name: "Portraits Studio", desc: "Portraits pro" },
+    { id: "lib1", name: "Mariages 2024", desc: "Clients & cérémonies", images: [] },
+    { id: "lib2", name: "Portraits Studio", desc: "Portraits pro", images: [] },
   ]);
 
   const [name, setName] = useState("");
@@ -24,6 +25,14 @@ export default function LibrariesPage() {
     libraryId: null,
     libraryName: ""
   });
+  const [openLibraryModal, setOpenLibraryModal] = useState({
+    isOpen: false,
+    libraryId: null
+  });
+  const [photoModal, setPhotoModal] = useState({
+    isOpen: false,
+    photo: null
+  });
   const [droppedFiles, setDroppedFiles] = useState([]);
   const [isDragActive, setIsDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -32,6 +41,7 @@ export default function LibrariesPage() {
   const [libraryImages, setLibraryImages] = useState([]);
   const directoryInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const modalImageInputRef = useRef(null);
 
   const IMAGE_EXTENSIONS = new Set([
     "jpg",
@@ -56,17 +66,14 @@ export default function LibrariesPage() {
   function handleFilesReady(files) {
     if (!files || files.length === 0) return;
     setDroppedFiles((prev) => [...prev, ...files]);
-    handleUploadFiles(files);
+    handleUploadFiles(files, { stageOnly: true });
   }
 
-  async function handleUploadFiles(files) {
+  async function handleUploadFiles(files, { targetLibraryId = null, stageOnly = false } = {}) {
     if (!files || files.length === 0 || isUploading) return;
     setIsUploading(true);
     setUploadError("");
     setUploadSuccess("");
-
-    // TODO: brancher la bibliothèque active choisie par l'utilisateur
-    const targetLibraryId = libraries[0]?.id || null;
 
     try {
       const response = await uploadImages(files, { libraryId: targetLibraryId || undefined });
@@ -86,10 +93,30 @@ export default function LibrariesPage() {
       }));
 
       // Limite mémoire : on stocke uniquement les infos nécessaires à l'affichage.
-      setLibraryImages((prev) => [
-        ...(normalized.length ? normalized : fallbackLocal),
-        ...prev,
-      ]);
+      const incomingImages = normalized.length ? normalized : fallbackLocal;
+
+      if (stageOnly) {
+        setLibraryImages((prev) => [
+          ...incomingImages,
+          ...prev,
+        ]);
+      }
+
+      if (targetLibraryId) {
+        setLibraries((prev) =>
+          prev.map((lib) =>
+            lib.id === targetLibraryId
+              ? {
+                  ...lib,
+                  images: [
+                    ...incomingImages,
+                    ...(Array.isArray(lib.images) ? lib.images : []),
+                  ],
+                }
+              : lib
+          )
+        );
+      }
 
       setDroppedFiles([]);
       setUploadSuccess("");
@@ -201,6 +228,16 @@ export default function LibrariesPage() {
     e.target.value = "";
   }
 
+  function handleModalImageSelect(e) {
+    if (isUploading) return;
+    const files = Array.from(e.target.files || []);
+    const imageFiles = files.filter(isImageFile);
+    if (imageFiles.length && modalLibrary?.id) {
+      handleUploadFiles(imageFiles, { targetLibraryId: modalLibrary.id, stageOnly: false });
+    }
+    e.target.value = "";
+  }
+
   function handleKeyDown(e) {
     if (e.key === "Enter") {
       addLibrary();
@@ -215,7 +252,14 @@ export default function LibrariesPage() {
     setErrors({ name: "", desc: "" });
     
     try {
-      setLibraries([{ id: crypto.randomUUID(), name, desc }, ...libraries]);
+      const newLibrary = {
+        id: crypto.randomUUID(),
+        name,
+        desc,
+        images: Array.isArray(libraryImages) ? libraryImages : [],
+      };
+      setLibraries((prev) => [newLibrary, ...prev]);
+      setLibraryImages([]);
       setName("");
       setDesc("");
       addToast(`Bibliothèque "${name}" créée avec succès`, "success");
@@ -245,6 +289,36 @@ export default function LibrariesPage() {
     addToast(`Bibliothèque "${deleteModal.libraryName}" supprimée`, "success");
     closeDeleteModal();
   }
+
+  function openLibrary(library) {
+    setOpenLibraryModal({
+      isOpen: true,
+      libraryId: library.id
+    });
+  }
+
+  function closeLibraryModal() {
+    setOpenLibraryModal({
+      isOpen: false,
+      libraryId: null
+    });
+  }
+
+  function openPhotoDetails(photo) {
+    setPhotoModal({
+      isOpen: true,
+      photo
+    });
+  }
+
+  function closePhotoDetails() {
+    setPhotoModal({
+      isOpen: false,
+      photo: null
+    });
+  }
+
+  const modalLibrary = libraries.find((lib) => lib.id === openLibraryModal.libraryId) || null;
 
   return (
     <div className="pageGrid">
@@ -383,14 +457,24 @@ export default function LibrariesPage() {
             images={libraryImages}
             pageSize={36}
             loading={isUploading}
-            resetKey={libraries[0]?.id || "default"}
+            resetKey={libraryImages.length || "default"}
+            onOpen={(photo) =>
+              openPhotoDetails({
+                ...photo,
+                library: "Dépôt d'images"
+              })
+            }
           />
         </div>
       </div>
 
       <div className="fullRow">
         <Tooltip text="Crée ta bibliotèque" position="top">
-          <button className="btn primary" onClick={addLibrary}>
+          <button
+            className="btn primary"
+            onClick={addLibrary}
+            disabled={!name.trim()}
+          >
             Créer
           </button>
         </Tooltip>
@@ -420,7 +504,9 @@ export default function LibrariesPage() {
                   </button>
                 </div>
                 <div className="mutedSmall">{l.desc || "—"}</div>
-                <button className="btn">Ouvrir (bientôt)</button>
+                <button className="btn" onClick={() => openLibrary(l)}>
+                  Ouvrir
+                </button>
               </div>
             ))}
           </div>
@@ -466,6 +552,62 @@ export default function LibrariesPage() {
           </button>
         </div>
       </Modal>
+
+      <Modal
+        isOpen={openLibraryModal.isOpen}
+        onClose={closeLibraryModal}
+        title={modalLibrary?.name || "Bibliothèque"}
+        contentClassName="modalWide"
+      >
+        <div style={{ marginBottom: "16px" }}>
+          <div
+            className={`library-upload-dropzone ${isUploading ? "library-upload-dropzone--disabled" : ""}`}
+            onClick={() => !isUploading && modalImageInputRef.current && modalImageInputRef.current.click()}
+            role="button"
+            tabIndex={0}
+            aria-disabled={isUploading}
+          >
+            <div className="library-upload-icon">
+              <UploadSimple size={24} />
+            </div>
+            <div className="library-upload-title">
+              {isUploading ? "Import en cours…" : "Ajouter des images à cette bibliothèque"}
+            </div>
+            <div className="library-upload-subtitle">
+              {isUploading ? "Merci de patienter" : "Cliquez pour sélectionner des images"}
+            </div>
+
+            <input
+              ref={modalImageInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleModalImageSelect}
+              disabled={isUploading}
+              style={{ display: "none" }}
+            />
+          </div>
+        </div>
+
+        <LibraryImageGrid
+          images={modalLibrary?.images || []}
+          pageSize={48}
+          loading={false}
+          resetKey={modalLibrary?.id || "library-modal"}
+          onOpen={(photo) =>
+            openPhotoDetails({
+              ...photo,
+              library: modalLibrary?.name || photo.library
+            })
+          }
+        />
+      </Modal>
+
+      <PhotoModal
+        isOpen={photoModal.isOpen}
+        onClose={closePhotoDetails}
+        photo={photoModal.photo}
+      />
     </div>
   );
 }

@@ -31,6 +31,17 @@ export default function PhotoModal({ isOpen, onClose, photo, onDelete }) {
     setShowDeleteConfirm(false);
   }
 
+  function handleDownload() {
+    if (!photo?.url) return;
+    const link = document.createElement("a");
+    link.href = photo.url;
+    link.download = photo.name || "photo";
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Détails de la photo">
@@ -111,8 +122,9 @@ export default function PhotoModal({ isOpen, onClose, photo, onDelete }) {
 
         {/* Actions */}
         <div className="modalActions">
-          <button className="btn">Télécharger</button>
-          <button className="btn">Modifier</button>
+          <button className="btn" onClick={handleDownload}>
+            Télécharger
+          </button>
           <button 
             className="btn btnDanger"
             onClick={handleDeleteClick}
