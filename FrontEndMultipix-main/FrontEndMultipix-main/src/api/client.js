@@ -119,12 +119,15 @@ export async function searchImages({ mode, query, imageFiles }) {
   });
 }
 
-export async function uploadImages(files) {
+export async function uploadImages(files, { libraryId } = {}) {
   const formData = new FormData();
   (files || []).forEach((f) => formData.append("files", f));
+  if (libraryId) {
+    formData.append("library_id", libraryId);
+  }
 
   if (USE_MOCK) {
-    console.log("uploadImages payload prêt :", files);
+    console.log("uploadImages payload prêt :", files, { libraryId });
     return { images: [] };
   }
 

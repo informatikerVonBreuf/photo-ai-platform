@@ -7,6 +7,9 @@ import ErrorState from "../ui/ErrorState";
 import Tooltip from "../ui/Tooltip";
 import Carousel from "../ui/Carousel";
 import PhotoModal from "../ui/PhotoModal";
+import ClusterModal from "../ui/ClusterModal";
+import { downloadClusterImages } from "../utils/downloadClusterImages";
+import { useToast } from "../hooks/useToast";
 
 const MOCK_LIBRARIES = [
   { id: "lib1", name: "Mariages 2024" },
@@ -27,6 +30,13 @@ export default function ClusteringPage() {
   const [error, setError] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [isClusterModalOpen, setIsClusterModalOpen] = useState(false);
+  const [isClusterDownloading, setIsClusterDownloading] = useState(false);
+  const { addToast, ToastContainer } = useToast();
+
+  // Validation UX: permet de lancer le clustering seulement si une bibliothèque est sélectionnée.
+  const canRun = Boolean(libraryId);
 
   async function run() {
     // TODO: /cluster
@@ -98,6 +108,30 @@ export default function ClusteringPage() {
     console.log("Photo supprimée avec succès");
   }
 
+  function openClusterModal(cluster) {
+    setSelectedCluster(cluster);
+    setIsClusterModalOpen(true);
+  }
+
+  function closeClusterModal() {
+    setIsClusterModalOpen(false);
+    setSelectedCluster(null);
+  }
+
+  async function handleDownloadCluster() {
+    if (!selectedCluster) return;
+    setIsClusterDownloading(true);
+
+    try {
+      await downloadClusterImages(selectedCluster);
+      addToast("Téléchargement du cluster lancé.");
+    } catch (err) {
+      addToast(err.message || "Échec du téléchargement du cluster.", "error");
+    } finally {
+      setIsClusterDownloading(false);
+    }
+  }
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
@@ -126,9 +160,14 @@ export default function ClusteringPage() {
             </div>
           </div>
 
-          <button className="btn primary" onClick={run}>
+          <button className="btn primary" onClick={run} disabled={!canRun}>
             Lancer
           </button>
+          {!canRun && (
+            <div className="mutedSmall" style={{ marginTop: 8 }}>
+              Sélectionnez une bibliothèque pour lancer le clustering.
+            </div>
+          )}
         </div>
       </div>
 
@@ -164,7 +203,15 @@ export default function ClusteringPage() {
                 <div className="clusterCard" key={cluster.id}>
                   <div className="clusterTop">
                     <div className="clusterTheme">{cluster.theme}</div>
-                    <div className="mutedSmall">{cluster.count} photos</div>
+                    <Tooltip text="Voir les photos du cluster" position="top">
+                      <button
+                        className="mutedSmall cluster-count-clickable"
+                        type="button"
+                        onClick={() => openClusterModal(cluster)}
+                      >
+                        {cluster.count} photos
+                      </button>
+                    </Tooltip>
                   </div>
                   <Carousel 
                     images={cluster.photos.map((p) => p.url)} 
@@ -198,6 +245,16 @@ export default function ClusteringPage() {
         photo={selectedPhoto}
         onDelete={handleDeletePhoto}
       />
+
+      <ClusterModal
+        isOpen={isClusterModalOpen}
+        onClose={closeClusterModal}
+        cluster={selectedCluster}
+        onDownload={handleDownloadCluster}
+        isDownloading={isClusterDownloading}
+      />
+
+      <ToastContainer />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import RatingStars from "../ui/RatingStars";
 import SkeletonCard from "../ui/SkeletonCard";
 import EmptyState from "../ui/EmptyState";
 import ErrorState from "../ui/ErrorState";
+import FieldError from "../ui/FieldError";
 import Tooltip from "../ui/Tooltip";
 import PhotoModal from "../ui/PhotoModal";
 import Dropdown from "../components/Dropdown";
@@ -41,6 +42,39 @@ export default function FiltersPage() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
+  // Validation UX: calcule l'état global du formulaire pour activer/désactiver "Appliquer".
+  const hasSelectedLibrary = Boolean(libraryId);
+  const hasFrom = Boolean(from);
+  const hasTo = Boolean(to);
+  const dateRangeIncomplete = hasFrom !== hasTo;
+  const dateOrderInvalid = hasFrom && hasTo && from > to;
+  const dateError = dateRangeIncomplete
+    ? "Veuillez renseigner une date de début et de fin, ou laisser les deux vides."
+    : dateOrderInvalid
+    ? "La date 'Du' doit être antérieure ou égale à 'Au'."
+    : "";
+
+  const maxWValue = maxW === "" ? null : Number(maxW);
+  const maxHValue = maxH === "" ? null : Number(maxH);
+  const maxWInvalid = maxWValue !== null && (!Number.isFinite(maxWValue) || maxWValue <= 0);
+  const maxHInvalid = maxHValue !== null && (!Number.isFinite(maxHValue) || maxHValue <= 0);
+  const maxWError = maxWInvalid ? "La largeur max doit être un nombre > 0." : "";
+  const maxHError = maxHInvalid ? "La hauteur max doit être un nombre > 0." : "";
+
+  const dateCriteriaActive = hasFrom && hasTo && !dateOrderInvalid;
+  const orientationCriteriaActive = orientation !== "any";
+  const maxWCriteriaActive = maxWValue !== null && !maxWInvalid;
+  const maxHCriteriaActive = maxHValue !== null && !maxHInvalid;
+  const hasAnyFilterCriteria =
+    tags.length > 0 ||
+    dateCriteriaActive ||
+    orientationCriteriaActive ||
+    maxWCriteriaActive ||
+    maxHCriteriaActive;
+  const hasValidationErrors = Boolean(dateError) || maxWInvalid || maxHInvalid;
+
+  const isFilterFormValid = hasSelectedLibrary && hasAnyFilterCriteria && !hasValidationErrors;
+
   function addTag() {
     const t = tagDraft.trim();
     if (!t || tags.includes(t)) return;
@@ -56,6 +90,7 @@ export default function FiltersPage() {
   }
 
   async function run() {
+    if (!isFilterFormValid) return;
     // TODO: appeler /filters avec scope + filtres
     setLoading(true);
     setError(null);
@@ -167,7 +202,9 @@ export default function FiltersPage() {
                 value={from}
                 onChange={(date) => setFrom(date)}
                 placeholder="Sélectionner une date"
+                className={dateError ? "error" : ""}
               />
+              <FieldError message={dateError} />
             </label>
             <label className="field">
               Au
@@ -175,7 +212,9 @@ export default function FiltersPage() {
                 value={to}
                 onChange={(date) => setTo(date)}
                 placeholder="Sélectionner une date"
+                className={dateError ? "error" : ""}
               />
+              <FieldError message={dateError} />
             </label>
 
             <div className="field">
@@ -192,11 +231,38 @@ export default function FiltersPage() {
               />
             </div>
 
-            <label className="field">Largeur max (px) <input value={maxW} onChange={(e) => setMaxW(e.target.value)} placeholder="ex: 4000" /></label>
-            <label className="field">Hauteur max (px) <input value={maxH} onChange={(e) => setMaxH(e.target.value)} placeholder="ex: 3000" /></label>
+            <label className="field">
+              Largeur max (px)
+              <input
+                value={maxW}
+                onChange={(e) => setMaxW(e.target.value)}
+                placeholder="ex: 4000"
+                className={maxWInvalid ? "error" : ""}
+                inputMode="numeric"
+              />
+              <FieldError message={maxWError} />
+            </label>
+            <label className="field">
+              Hauteur max (px)
+              <input
+                value={maxH}
+                onChange={(e) => setMaxH(e.target.value)}
+                placeholder="ex: 3000"
+                className={maxHInvalid ? "error" : ""}
+                inputMode="numeric"
+              />
+              <FieldError message={maxHError} />
+            </label>
           </div>
 
-          <button className="btn primary" onClick={run}>Appliquer</button>
+          <button className="btn primary" onClick={run} disabled={!isFilterFormValid}>
+            Appliquer
+          </button>
+          {(!hasSelectedLibrary || !hasAnyFilterCriteria) && !hasValidationErrors && (
+            <div className="muted small" style={{ marginTop: 8 }}>
+              Sélectionnez une bibliothèque et configurez au moins un critère de filtre pour appliquer les résultats.
+            </div>
+          )}
         </div>
       </div>
 

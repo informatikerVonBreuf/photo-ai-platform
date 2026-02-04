@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { UploadSimple } from "@phosphor-icons/react";
 import RatingStars from "../ui/RatingStars";
 import HistoryPanel from "../ui/HistoryPanel";
 import useToast from "../hooks/useToast";
 import FieldError from "../ui/FieldError";
 import Tooltip from "../ui/Tooltip";
 import Modal from "../ui/Modal";
+import { uploadImages } from "../api/client";
+import LibraryImageGrid from "../components/LibraryImageGrid";
 
 export default function LibrariesPage() {
   const { toasts, addToast, ToastContainer } = useToast();
@@ -21,6 +24,182 @@ export default function LibrariesPage() {
     libraryId: null,
     libraryName: ""
   });
+  const [droppedFiles, setDroppedFiles] = useState([]);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState("");
+  const [libraryImages, setLibraryImages] = useState([]);
+  const directoryInputRef = useRef(null);
+  const imageInputRef = useRef(null);
+
+  const IMAGE_EXTENSIONS = new Set([
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+    "gif",
+    "bmp",
+    "tiff",
+    "heic",
+    "avif"
+  ]);
+
+  function isImageFile(file) {
+    if (!file) return false;
+    if (file.type && file.type.startsWith("image/")) return true;
+    const parts = file.name.split(".");
+    const ext = parts.length > 1 ? parts.pop().toLowerCase() : "";
+    return IMAGE_EXTENSIONS.has(ext);
+  }
+
+  function handleFilesReady(files) {
+    if (!files || files.length === 0) return;
+    setDroppedFiles((prev) => [...prev, ...files]);
+    handleUploadFiles(files);
+  }
+
+  async function handleUploadFiles(files) {
+    if (!files || files.length === 0 || isUploading) return;
+    setIsUploading(true);
+    setUploadError("");
+    setUploadSuccess("");
+
+    // TODO: brancher la bibliothèque active choisie par l'utilisateur
+    const targetLibraryId = libraries[0]?.id || null;
+
+    try {
+      const response = await uploadImages(files, { libraryId: targetLibraryId || undefined });
+      const responseImages = Array.isArray(response?.images) ? response.images : [];
+      const normalized = responseImages
+        .map((img) => ({
+          id: img.id || img.url || img.path || img.src || crypto.randomUUID(),
+          url: img.url || img.path || img.src,
+          name: img.name || img.filename || "Image",
+        }))
+        .filter((img) => img.url);
+
+      const fallbackLocal = files.map((file) => ({
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        file,
+        name: file.name,
+      }));
+
+      // Limite mémoire : on stocke uniquement les infos nécessaires à l'affichage.
+      setLibraryImages((prev) => [
+        ...(normalized.length ? normalized : fallbackLocal),
+        ...prev,
+      ]);
+
+      setDroppedFiles([]);
+      setUploadSuccess("");
+      addToast("Images importées avec succès", "success");
+      // TODO: rafraîchir la liste des bibliothèques via l'API quand elle sera branchée
+    } catch (err) {
+      const msg = err?.message || "Erreur lors de l'import";
+      setUploadError(msg);
+      addToast(msg, "error");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function traverseEntry(entry) {
+    if (!entry) return [];
+
+    if (entry.isFile) {
+      return new Promise((resolve) => {
+        entry.file((file) => resolve([file]), () => resolve([]));
+      });
+    }
+
+    if (entry.isDirectory) {
+      const dirReader = entry.createReader();
+      const entries = [];
+
+      function readEntries() {
+        return new Promise((resolve) => {
+          dirReader.readEntries((batch) => {
+            if (!batch.length) return resolve();
+            entries.push(...batch);
+            resolve(readEntries());
+          }, () => resolve());
+        });
+      }
+
+      await readEntries();
+      const nested = await Promise.all(entries.map(traverseEntry));
+      return nested.flat();
+    }
+
+    return [];
+  }
+
+  async function getFilesFromDataTransferItems(items) {
+    if (!items || items.length === 0) return [];
+    const entries = Array.from(items)
+      .map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null))
+      .filter(Boolean);
+
+    if (!entries.length) return [];
+    const filesByEntry = await Promise.all(entries.map(traverseEntry));
+    return filesByEntry.flat();
+  }
+
+  function handleDragOver(e) {
+    if (isUploading) return;
+    e.preventDefault();
+  }
+
+  function handleDragEnter(e) {
+    if (isUploading) return;
+    e.preventDefault();
+    setIsDragActive(true);
+  }
+
+  function handleDragLeave(e) {
+    if (isUploading) return;
+    e.preventDefault();
+    setIsDragActive(false);
+  }
+
+  async function handleDrop(e) {
+    if (isUploading) return;
+    e.preventDefault();
+    setIsDragActive(false);
+    const dt = e.dataTransfer;
+    let files = [];
+
+    if (dt && dt.items && dt.items.length) {
+      const fromEntries = await getFilesFromDataTransferItems(dt.items);
+      if (fromEntries.length) {
+        files = fromEntries;
+      } else if (dt.files && dt.files.length) {
+        files = Array.from(dt.files);
+      }
+    } else if (dt && dt.files && dt.files.length) {
+      files = Array.from(dt.files);
+    }
+
+    const imageFiles = files.filter(isImageFile);
+    handleFilesReady(imageFiles);
+  }
+
+  function handleDirectorySelect(e) {
+    if (isUploading) return;
+    const files = Array.from(e.target.files || []);
+    const imageFiles = files.filter(isImageFile);
+    handleFilesReady(imageFiles);
+    e.target.value = "";
+  }
+
+  function handleImageSelect(e) {
+    if (isUploading) return;
+    const files = Array.from(e.target.files || []);
+    const imageFiles = files.filter(isImageFile);
+    handleFilesReady(imageFiles);
+    e.target.value = "";
+  }
 
   function handleKeyDown(e) {
     if (e.key === "Enter") {
@@ -109,15 +288,112 @@ export default function LibrariesPage() {
             />
           </label>
 
-          <button className="btn primary" onClick={addLibrary}>
-            Créer
-          </button>
         </div>
+
+        <div className="card">
+          <div className="cardHeader">
+            <Tooltip text="Dépose des images ou un dossier complet" position="right">
+              <div className="cardTitle"></div>
+            </Tooltip>
+          </div>
+
+          <div
+            className={`library-upload-dropzone ${isDragActive ? "library-upload-dropzone--active" : ""} ${isUploading ? "library-upload-dropzone--disabled" : ""}`}
+            onClick={() => !isUploading && imageInputRef.current && imageInputRef.current.click()}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            role="button"
+            tabIndex={0}
+            aria-disabled={isUploading}
+          >
+            <div className="library-upload-icon">
+              <UploadSimple size={28} />
+            </div>
+            <div className="library-upload-title">
+              {isUploading ? "Import en cours…" : "Déposez vos images ou dossiers ici"}
+            </div>
+            <div className="library-upload-subtitle">
+              {isUploading ? "Merci de patienter" : "ou cliquez pour sélectionner des images"}
+            </div>
+
+            <input
+              ref={imageInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageSelect}
+              disabled={isUploading}
+              style={{ display: "none" }}
+            />
+
+            <input
+              ref={directoryInputRef}
+              type="file"
+              multiple
+              directory=""
+              webkitdirectory=""
+              mozdirectory=""
+              onChange={handleDirectorySelect}
+              disabled={isUploading}
+              style={{ display: "none" }}
+            />
+          </div>
+
+
+          {droppedFiles.length > 0 && (
+            <div className="mutedSmall" style={{ marginTop: "10px" }}>
+              {droppedFiles.length} image(s) prête(s) pour l’upload.
+            </div>
+          )}
+
+          {uploadError && (
+            <div style={{ marginTop: "8px" }}>
+              <FieldError message={uploadError} />
+            </div>
+          )}
+
+          {uploadSuccess && !uploadError && (
+            <div className="mutedSmall" style={{ marginTop: "8px", color: "var(--success)" }}>
+              {uploadSuccess}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Right column */}
       <div className="rightCol">
         <HistoryPanel title="Historique — Bibliothèques" items={[]} />
+      </div>
+
+      {/* Mes bibliothèques */}
+      <div className="fullRow">
+        <div className="card">
+          <div className="cardHeader">
+            <div>
+              <div className="cardSub">
+                {libraryImages.length ? `${libraryImages.length} image(s)` : ""}
+              </div>
+            </div>
+          </div>
+
+          <LibraryImageGrid
+            images={libraryImages}
+            pageSize={36}
+            loading={isUploading}
+            resetKey={libraries[0]?.id || "default"}
+          />
+        </div>
+      </div>
+
+      <div className="fullRow">
+        <Tooltip text="Crée ta bibliotèque" position="top">
+          <button className="btn primary" onClick={addLibrary}>
+            Créer
+          </button>
+        </Tooltip>
       </div>
 
       {/* Mes bibliothèques */}
