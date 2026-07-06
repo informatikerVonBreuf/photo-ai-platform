@@ -1,8 +1,11 @@
+import { useState } from "react";
 import RatingStars from "../ui/RatingStars";
 import Tooltip from "../ui/Tooltip";
 
 
 export default function AssistantPage() {
+  const [assistantMode, setAssistantMode] = useState("techniques");
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
@@ -18,6 +21,39 @@ export default function AssistantPage() {
             <div>
               <div className="cardTitle">Chat</div>
               <div className="cardSub">Base UI (DB + modèles plus tard).</div>
+            </div>
+          </div>
+
+          <div className="toggleRow" style={{ marginTop: "4px", justifyContent: "flex-end" }}>
+            <div className="toggle">
+              <button
+                type="button"
+                className={`toggleBtn ${assistantMode === "techniques" ? "on" : ""}`}
+                onClick={() => setAssistantMode("techniques")}
+              >
+                Techniques
+              </button>
+              <button
+                type="button"
+                className={`toggleBtn ${assistantMode === "usages" ? "on" : ""}`}
+                onClick={() => setAssistantMode("usages")}
+              >
+                Usages
+              </button>
+              <button
+                type="button"
+                className={`toggleBtn ${assistantMode === "resultats" ? "on" : ""}`}
+                onClick={() => setAssistantMode("resultats")}
+              >
+                Résultats
+              </button>
+              <button
+                type="button"
+                className={`toggleBtn ${assistantMode === "problemes" ? "on" : ""}`}
+                onClick={() => setAssistantMode("problemes")}
+              >
+                Problèmes
+              </button>
             </div>
           </div>
 

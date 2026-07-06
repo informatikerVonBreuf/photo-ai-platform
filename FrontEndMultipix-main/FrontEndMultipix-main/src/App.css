@@ -459,6 +459,92 @@ a:hover {
   font-size:12px;
 }
 
+.albumModeRow{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.albumModeOption{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.albumModeDot{
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.06);
+  position: relative;
+}
+
+.albumModeDot.active{
+  border-color: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,.2));
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.albumBadgeRow{
+  display:flex;
+  flex-wrap: wrap;
+  gap:8px;
+  margin: 0 0 12px 0;
+}
+
+.albumBadge{
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.albumBadge--active{
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.2));
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+
+.albumBadgeDelete{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted);
+  background: rgba(255,255,255,.08);
+}
+
+.albumBadgeDelete:hover{
+  color: var(--text);
+  background: rgba(255,255,255,.16);
+}
+
+.shootingModalBody .albumModeOption,
+.shootingModalBody .dd-label,
+.shootingModalBody input {
+  font-family: "Space Grotesk", var(--font-body);
+}
+
 /* Cards */
 .card{
   border:30px solid var(--stroke-soft);
@@ -854,6 +940,12 @@ input:focus,select:focus{
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap:12px;
 }
+.libraryGallery{
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+.libraryGallery .tile{
+  animation: tileFadeIn 180ms ease-out;
+}
 .tile{
   border-radius: 18px;
   overflow:hidden;
@@ -865,6 +957,17 @@ input:focus,select:focus{
 .tileMeta{ padding:10px; }
 .tileCap{ font-weight:700; font-size:13px; }
 .tileSub{ color:var(--muted); font-size:12px; margin-top:4px; }
+
+@keyframes tileFadeIn{
+  from{
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
 /* Clusters */
 .clusterGrid{
@@ -973,6 +1076,7 @@ input:focus,select:focus{
 }
 
 /* Stars */
+.ratingRow{ display:flex; align-items:center; gap:16px; justify-content:flex-start; flex-wrap:wrap; }
 .stars{ display:flex; align-items:center; gap:8px; }
 .star{
   border:none;
@@ -985,6 +1089,43 @@ input:focus,select:focus{
   color: color-mix(in srgb, var(--accent) 85%, #ffd166);
   text-shadow: 0 6px 18px rgba(0,0,0,.25);
 }
+.ratingComment{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:1;
+  min-width: 220px;
+  max-width: 520px;
+}
+.ratingCommentInput{
+  flex:1;
+  resize: vertical;
+  min-height: 42px;
+  max-height: 120px;
+  padding:10px 12px;
+  border-radius: 12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.2);
+  color: var(--text);
+  font-family: "Space Grotesk", var(--font-body);
+}
+.ratingCommentInput::placeholder{ color: var(--muted); }
+.ratingCommentSend{
+  border:none;
+  border-radius: 10px;
+  padding:10px 14px;
+  font-weight: 700;
+  cursor:pointer;
+  color: var(--text);
+  font-family: "Space Grotesk", var(--font-body);
+  background: color-mix(in srgb, var(--accent) 30%, rgba(0,0,0,.2));
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+.ratingCommentSend:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  background: color-mix(in srgb, var(--accent) 40%, rgba(0,0,0,.2));
+}
 
 /* History */
 .historyList{ display:grid; gap:10px; }
@@ -993,6 +1134,13 @@ input:focus,select:focus{
   border-radius: 14px;
   border:1px solid rgba(255,255,255,.08);
   background: rgba(0,0,0,.16);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.historyItem:hover{
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  border-color: rgba(255,255,255,.18);
+  transform: translateY(-1px);
 }
 .historyMain{ font-weight:800; font-size:14px; }
 .historySub{ color:var(--muted); font-size:12px; margin-top:4px; }
@@ -1225,6 +1373,69 @@ input:focus, select:focus {
   color: #ef4444;
 }
 
+/* Libraries upload dropzone */
+.library-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(12, 0, 50, 0.6), rgba(36, 0, 144, 0.35), rgba(53, 0, 211, 0.2));
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 30px rgba(9, 8, 30, 0.45);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.library-upload-dropzone:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 14px 36px rgba(31, 16, 90, 0.45);
+  transform: translateY(-2px);
+}
+
+.library-upload-dropzone--active {
+  border-color: rgba(180, 160, 255, 0.6);
+  background: linear-gradient(135deg, rgba(36, 0, 144, 0.55), rgba(53, 0, 211, 0.35), rgba(96, 60, 255, 0.25));
+  box-shadow: 0 0 0 1px rgba(120, 88, 255, 0.4), 0 18px 40px rgba(76, 45, 200, 0.55);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.library-upload-dropzone--disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: saturate(0.7);
+}
+
+.library-upload-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(215, 210, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.library-upload-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.library-upload-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
 /* Cluster card entrance animations */
 .clusterCard {
   animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -1293,6 +1504,10 @@ input:focus, select:focus {
   animation: modalFadeIn 0.2s ease;
 }
 
+.modalOverlay.photoModalOverlay {
+  z-index: 2600;
+}
+
 .modalContent {
   background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.08));
   border: 1px solid var(--stroke-strong);
@@ -1305,6 +1520,11 @@ input:focus, select:focus {
   flex-direction: column;
   box-shadow: var(--shadow);
   animation: modalSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modalContent.modalWide {
+  max-width: 1100px;
+  width: min(1100px, 100%);
 }
 
 .modalHeader {
@@ -1348,6 +1568,164 @@ input:focus, select:focus {
   overflow-y: auto;
   color: var(--muted);
   line-height: 1.6;
+}
+
+/* Variantes de modal */
+.modalContent.clusterModalContentWrapper {
+  max-width: 980px;
+  width: min(980px, 100%);
+}
+
+.modalBody.clusterModalBody {
+  padding: 22px 24px 26px;
+}
+
+/* Cluster modal – Multipix glassmorphism */
+.modalOverlay.cluster-modal-overlay {
+  background: rgba(6, 8, 18, 0.72);
+  backdrop-filter: blur(12px) saturate(120%);
+  animation: clusterModalFade 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.modalContent.cluster-modal {
+  background: radial-gradient(120% 140% at 0% 0%, rgba(120, 90, 255, 0.22) 0%, rgba(20, 18, 40, 0.92) 45%),
+    linear-gradient(135deg, rgba(14, 18, 40, 0.95), rgba(8, 12, 28, 0.96));
+  border: 1px solid rgba(120, 120, 255, 0.24);
+  box-shadow: 0 30px 90px rgba(6, 10, 26, 0.65);
+  animation: clusterModalIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.modalContent.cluster-modal .modalHeader {
+  border-bottom: 1px solid rgba(120, 120, 255, 0.18);
+}
+
+.modalContent.cluster-modal .modalClose {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.modalContent.cluster-modal .modalClose:hover {
+  background: rgba(120, 120, 255, 0.2);
+  color: #fff;
+}
+
+.modalBody.cluster-modal-body {
+  padding: 22px 24px 26px;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.clusterModalGrid.cluster-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.clusterModalTile.cluster-modal-tile {
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(8, 12, 26, 0.55);
+  border: 1px solid rgba(120, 120, 255, 0.18);
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.clusterModalTile.cluster-modal-tile img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.clusterModalTile.cluster-modal-tile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(140, 140, 255, 0.4);
+  box-shadow: 0 16px 30px rgba(10, 12, 30, 0.45);
+}
+
+@keyframes clusterModalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes clusterModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Cluster modal */
+.clusterModalContent {
+  display: grid;
+  gap: 18px;
+}
+
+.clusterModalTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.clusterModalCount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+}
+
+.clusterDownloadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clusterModalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.clusterModalActions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top:16px;
+}
+
+.clusterModalTile {
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255,255,255,.08);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.clusterModalTile img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.clusterModalTile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.2);
+}
+
+.clusterModalCaption {
+  padding: 8px 10px 10px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 /* Actions du modal */
@@ -1618,6 +1996,32 @@ input:focus, select:focus {
   transition: transform 0.4s ease;
 }
 
+/* Compteur cliquable des clusters */
+.cluster-count-clickable {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.cluster-count-clickable:hover {
+  color: var(--text);
+  background: rgba(130, 120, 255, 0.12);
+  border-color: rgba(130, 120, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.cluster-count-clickable:focus-visible {
+  outline: 2px solid rgba(130, 120, 255, 0.6);
+  outline-offset: 2px;
+}
+
 /* Carousel image cliquable */
 .carouselImage[style*="cursor: pointer"]:hover {
   transform: scale(1.02);
@@ -1634,11 +2038,16 @@ input:focus, select:focus {
   .photoModalLabel {
     min-width: auto;
   }
+
+  .clusterModalTile img {
+    height: 110px;
+  }
 }
 
 /* Responsive */
 @media (max-width: 1100px){
   .gallery{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .libraryGallery{ grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .libGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 900px){
@@ -1647,6 +2056,7 @@ input:focus, select:focus {
   .sidebarBottom{ position:relative; left:0; right:0; bottom:0; }
   .pageGrid{ grid-template-columns: 1fr; }
   .gallery{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .libraryGallery{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .clusterGrid{ grid-template-columns: 1fr; }
   .libGrid{ grid-template-columns: 1fr; }
   .grid2{ grid-template-columns: 1fr; }

@@ -119,12 +119,15 @@ export async function searchImages({ mode, query, imageFiles }) {
   });
 }
 
-export async function uploadImages(files) {
+export async function uploadImages(files, { libraryId } = {}) {
   const formData = new FormData();
   (files || []).forEach((f) => formData.append("files", f));
+  if (libraryId) {
+    formData.append("library_id", libraryId);
+  }
 
   if (USE_MOCK) {
-    console.log("uploadImages payload prêt :", files);
+    console.log("uploadImages payload prêt :", files, { libraryId });
     return { images: [] };
   }
 
@@ -148,6 +151,28 @@ export async function askAssistant(message) {
     method: "POST",
     body: formData,
     timeoutMs: 60000,
+  });
+}
+
+/** =========================================================
+ * RATING / FEEDBACK
+ * ========================================================= */
+export async function submitRatingComment({ featureName, rating, comment }) {
+  const payload = {
+    feature: featureName,
+    rating,
+    comment,
+  };
+
+  if (USE_MOCK) {
+    console.log("submitRatingComment mock", payload);
+    return { ok: true };
+  }
+
+  return await request("/ratings", {
+    method: "POST",
+    body: payload,
+    timeoutMs: 30000,
   });
 }
 
