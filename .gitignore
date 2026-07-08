@@ -1,76 +1,23 @@
-# =====================
 # Python
-# =====================
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 .venv/
-venv/
-env/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.ipynb_checkpoints/
-
-# =====================
-# Environment / secrets
-# =====================
 .env
-.env.*
-!.env.example
 
-# =====================
-# Node / frontend
-# =====================
+# Node
 node_modules/
-frontend/node_modules/
-dist/
-frontend/dist/
 .next/
-coverage/
+dist/
 
-# =====================
-# Data, notebooks, models
-# Keep notebooks/*.ipynb versionable, ignore generated assets.
-# =====================
+# Data / models
 data/
 datasets/
 models/
-!frontend/public/models/
-!frontend/public/models/**
-notebooks/data/
-notebooks/cache/
-notebooks/outputs/
-notebooks/.venv/
-ml/runs/
-ml/artifacts/
-reports/generated/
 *.pt
-*.pth
 *.onnx
-*.safetensors
-*.faiss
-*.index
-*.npy
-*.npz
-*.parquet
-*.sqlite
-*.db
 
-# =====================
-# Logs / temp
-# =====================
-*.log
-tmp/
-temp/
-.cache/
-
-# =====================
-# OS / editors
-# =====================
+# OS
 .DS_Store
-Thumbs.db
-desktop.ini
-~$*
-.vscode/
-.idea/
+
+# Logs
+*.log
