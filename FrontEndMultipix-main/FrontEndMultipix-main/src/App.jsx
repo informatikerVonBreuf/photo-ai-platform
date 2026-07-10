@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import DashboardLayout from "./pages/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 
@@ -30,13 +30,16 @@ const BG_MODELS = [
   { value: "/models/camera12.glb", label: "Sniper" },
 ];
 
+function pickDefaultBgModel() {
+  const candidates = BG_MODELS.filter((m) => m.value !== "none");
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  return pick?.value || "none";
+}
+
+const DEFAULT_BG_MODEL = pickDefaultBgModel();
+
 export default function App() {
-  const defaultBgModel = useMemo(() => {
-    const candidates = BG_MODELS.filter((m) => m.value !== "none");
-    const pick = candidates[Math.floor(Math.random() * candidates.length)];
-    return pick?.value || "none";
-  }, []);
-  const [bgModel, setBgModel] = useState(defaultBgModel);
+  const [bgModel, setBgModel] = useState(DEFAULT_BG_MODEL);
   return (
     <div className="app-root">
       <BackgroundScene modelPath={bgModel === "none" ? null : bgModel} />

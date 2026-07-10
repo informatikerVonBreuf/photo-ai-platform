@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UploadSimple } from "@phosphor-icons/react";
 import RatingStars from "../ui/RatingStars";
 import HistoryPanel from "../ui/HistoryPanel";
@@ -11,7 +11,7 @@ import { uploadImages } from "../api/client";
 import LibraryImageGrid from "../components/LibraryImageGrid";
 
 export default function LibrariesPage() {
-  const { toasts, addToast, ToastContainer } = useToast();
+  const { addToast, ToastContainer } = useToast();
   const [libraries, setLibraries] = useState([
     { id: "lib1", name: "Mariages 2024", desc: "Clients & cérémonies", images: [] },
     { id: "lib2", name: "Portraits Studio", desc: "Portraits pro", images: [] },
@@ -47,6 +47,15 @@ export default function LibrariesPage() {
   const directoryInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const modalImageInputRef = useRef(null);
+  const localPreviewUrlsRef = useRef(new Set());
+
+  useEffect(() => {
+    const previewUrls = localPreviewUrlsRef.current;
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewUrls.clear();
+    };
+  }, []);
 
   const [mockShootings, setMockShootings] = useState([
     {
@@ -101,6 +110,25 @@ export default function LibrariesPage() {
     return IMAGE_EXTENSIONS.has(ext);
   }
 
+  function createLocalPreview(file) {
+    const url = URL.createObjectURL(file);
+    localPreviewUrlsRef.current.add(url);
+    return {
+      id: `${file.name}-${file.size}-${file.lastModified}`,
+      file,
+      url,
+      name: file.name,
+      isLocalPreview: true,
+    };
+  }
+
+  function revokeLocalPreview(image) {
+    if (image?.isLocalPreview && image.url) {
+      URL.revokeObjectURL(image.url);
+      localPreviewUrlsRef.current.delete(image.url);
+    }
+  }
+
   function handleFilesReady(files) {
     if (!files || files.length === 0) return;
     setDroppedFiles((prev) => [...prev, ...files]);
@@ -124,14 +152,8 @@ export default function LibrariesPage() {
         }))
         .filter((img) => img.url);
 
-      const fallbackLocal = files.map((file) => ({
-        id: `${file.name}-${file.size}-${file.lastModified}`,
-        file,
-        name: file.name,
-      }));
-
       // Limite mémoire : on stocke uniquement les infos nécessaires à l'affichage.
-      const incomingImages = normalized.length ? normalized : fallbackLocal;
+      const incomingImages = normalized.length ? normalized : files.map(createLocalPreview);
 
       if (stageOnly) {
         setLibraryImages((prev) => [
@@ -302,7 +324,8 @@ export default function LibrariesPage() {
       setDesc("");
       addToast(`Bibliothèque "${name}" créée avec succès`, "success");
     } catch (err) {
-      addToast("Erreur lors de la création de la bibliothèque", "error");
+      const msg = err?.message || "Erreur lors de la création de la bibliothèque";
+      addToast(msg, "error");
     }
   }
 
@@ -361,6 +384,7 @@ export default function LibrariesPage() {
     if (!photo) return;
 
     const photoKey = photo.id || photo.url;
+    revokeLocalPreview(photo);
 
     if (photo.library === "Dépôt d'images") {
       setLibraryImages((prev) => prev.filter((img) => (img.id || img.url) !== photoKey));

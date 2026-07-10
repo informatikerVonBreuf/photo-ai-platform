@@ -61,7 +61,7 @@ export default function Dropdown({ label, items = [], onSelect, className = "", 
       window.removeEventListener("resize", updateMenuPosition);
       window.removeEventListener("scroll", updateMenuPosition, true);
     };
-  }, [isOpen]);
+  }, [isOpen, menuWidth]);
 
   const handleSelect = (item) => {
     setSelected(item);

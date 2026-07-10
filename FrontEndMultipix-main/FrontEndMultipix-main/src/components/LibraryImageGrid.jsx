@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import EmptyState from "../ui/EmptyState";
 import SkeletonCard from "../ui/SkeletonCard";
 
@@ -9,37 +9,14 @@ export default function LibraryImageGrid({
   onOpen,
   resetKey,
 }) {
-  const [page, setPage] = useState(1);
-  const [objectUrlMap, setObjectUrlMap] = useState({});
-
-  useEffect(() => {
-    if (resetKey !== undefined) {
-      setPage(1);
-    }
-  }, [resetKey]);
+  const [pagination, setPagination] = useState({ resetKey, page: 1 });
+  const page = pagination.resetKey === resetKey ? pagination.page : 1;
 
   const visibleImages = useMemo(() => {
     const limit = Math.max(1, pageSize) * page;
     // Limite explicite par lot pour éviter de rendre un trop grand nombre de vignettes.
     return images.slice(0, limit);
   }, [images, page, pageSize]);
-
-  useEffect(() => {
-    const nextMap = {};
-
-    visibleImages.forEach((img) => {
-      if (!img?.url && img?.file instanceof File) {
-        nextMap[img.id] = URL.createObjectURL(img.file);
-      }
-    });
-
-    setObjectUrlMap(nextMap);
-
-    return () => {
-      // Nettoyage des URLs temporaires pour limiter l'usage mémoire.
-      Object.values(nextMap).forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [visibleImages]);
 
   const hasMore = images.length > visibleImages.length;
 
@@ -65,7 +42,7 @@ export default function LibraryImageGrid({
     <div>
       <div className="gallery libraryGallery">
         {visibleImages.map((img) => {
-          const src = img.url || objectUrlMap[img.id];
+          const src = img.url;
           const alt = img.name || img.caption || "Image";
           const photoForModal = src ? { ...img, url: src } : img;
 
@@ -87,7 +64,10 @@ export default function LibraryImageGrid({
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: "14px" }}>
         {hasMore ? (
-          <button className="btn" onClick={() => setPage((p) => p + 1)}>
+          <button
+            className="btn"
+            onClick={() => setPagination({ resetKey, page: page + 1 })}
+          >
             Afficher plus
           </button>
         ) : (

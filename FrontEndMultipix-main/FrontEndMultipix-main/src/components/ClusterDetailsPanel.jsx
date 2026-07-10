@@ -1,5 +1,5 @@
 // src/components/ClusterDetailsPanel.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function ClusterDetailsPanel({
   cluster,
@@ -7,19 +7,6 @@ export default function ClusterDetailsPanel({
   onExportCluster,
   onExportAll,
 }) {
-  const [theme, setTheme] = useState("");
-  const [validated, setValidated] = useState(false);
-
-  useEffect(() => {
-    setTheme(cluster?.theme || "");
-    setValidated(Boolean(cluster?.validated));
-  }, [cluster]);
-
-  const canSave = useMemo(() => {
-    if (!cluster) return false;
-    return theme.trim().length > 0 || validated !== Boolean(cluster.validated);
-  }, [cluster, theme, validated]);
-
   if (!cluster) {
     return (
       <div className="panel">
@@ -34,6 +21,29 @@ export default function ClusterDetailsPanel({
       </div>
     );
   }
+
+  const clusterKey =
+    cluster.id || cluster.clusterId || cluster.theme || `${cluster.count || 0}-${cluster.confidence || 0}`;
+
+  return (
+    <ClusterDetailsForm
+      key={clusterKey}
+      cluster={cluster}
+      onSave={onSave}
+      onExportCluster={onExportCluster}
+      onExportAll={onExportAll}
+    />
+  );
+}
+
+function ClusterDetailsForm({ cluster, onSave, onExportCluster, onExportAll }) {
+  const [theme, setTheme] = useState(cluster?.theme || "");
+  const [validated, setValidated] = useState(Boolean(cluster?.validated));
+
+  const canSave = useMemo(() => {
+    if (!cluster) return false;
+    return theme.trim().length > 0 || validated !== Boolean(cluster.validated);
+  }, [cluster, theme, validated]);
 
   return (
     <div className="panel">

@@ -51,36 +51,46 @@ const MODEL_INITIALS = {
 // IMPORTANT : ne pas précharger tous, seulement le modèle choisi plus bas si tu veux
 // (tu peux enlever le preload global que tu avais avant)
 
+const MOVEMENT_BOUNDS = {
+  left: -3,
+  right: 3,
+  top: 1.8,
+  bottom: -1.8,
+};
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function unitFromSeed(value, salt) {
+  return (hashString(`${value}:${salt}`) % 10000) / 10000;
+}
+
+const DEFAULT_CAMERA_MODEL =
+  CAMERA_MODELS[Math.floor(Math.random() * CAMERA_MODELS.length)];
+
 /**
  * Caméra 3D qui se déplace et rebondit sur les bords,
  * avec sélection ALÉATOIRE d’un modèle parmi CAMERA_MODELS.
  */
 function FloatingModel({ modelPath }) {
-  const randomPath = useMemo(() => {
-    const index = Math.floor(Math.random() * CAMERA_MODELS.length);
-    return CAMERA_MODELS[index];
-  }, []);
-
-  const resolvedPath = modelPath || randomPath;
+  const resolvedPath = modelPath || DEFAULT_CAMERA_MODEL;
 
   const { scene } = useGLTF(resolvedPath);
   const modelRef = useRef(null);
 
-  // Limites de déplacement (élargies pour couvrir plus l'écran)
-  const bounds = useRef({
-    left: -3,
-    right: 3,
-    top: 1.8,
-    bottom: -1.8,
-  });
-
   const initialPosition = useMemo(() => {
     const preset = MODEL_INITIALS[resolvedPath];
     if (preset?.position) return preset.position;
-    const { left, right, top, bottom } = bounds.current;
+    const { left, right, top, bottom } = MOVEMENT_BOUNDS;
     return {
-      x: left + Math.random() * (right - left),
-      y: bottom + Math.random() * (top - bottom),
+      x: left + unitFromSeed(resolvedPath, 'x') * (right - left),
+      y: bottom + unitFromSeed(resolvedPath, 'y') * (top - bottom),
     };
   }, [resolvedPath]);
 
@@ -91,7 +101,7 @@ function FloatingModel({ modelPath }) {
 
   const initialVelocity = useMemo(() => {
     const speed = 0.06;
-    const angle = Math.random() * Math.PI * 2;
+    const angle = unitFromSeed(resolvedPath, 'velocity') * Math.PI * 2;
     return {
       x: Math.cos(angle) * speed,
       y: Math.sin(angle) * speed,
@@ -130,19 +140,19 @@ function FloatingModel({ modelPath }) {
     pos.x += vel.x * delta;
     pos.y += vel.y * delta;
 
-    if (pos.x > bounds.current.right) {
-      pos.x = bounds.current.right;
+    if (pos.x > MOVEMENT_BOUNDS.right) {
+      pos.x = MOVEMENT_BOUNDS.right;
       vel.x *= -1;
-    } else if (pos.x < bounds.current.left) {
-      pos.x = bounds.current.left;
+    } else if (pos.x < MOVEMENT_BOUNDS.left) {
+      pos.x = MOVEMENT_BOUNDS.left;
       vel.x *= -1;
     }
 
-    if (pos.y > bounds.current.top) {
-      pos.y = bounds.current.top;
+    if (pos.y > MOVEMENT_BOUNDS.top) {
+      pos.y = MOVEMENT_BOUNDS.top;
       vel.y *= -1;
-    } else if (pos.y < bounds.current.bottom) {
-      pos.y = bounds.current.bottom;
+    } else if (pos.y < MOVEMENT_BOUNDS.bottom) {
+      pos.y = MOVEMENT_BOUNDS.bottom;
       vel.y *= -1;
     }
 
