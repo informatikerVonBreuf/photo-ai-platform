@@ -11,12 +11,13 @@ export function OrientationSelector({ value, onChange }) {
     { value: "landscape", label: "Paysage" },
     { value: "square", label: "Carré" },
   ];
+  const selectedOption = orientationOptions.find((item) => item.value === value);
 
   return (
     <div className="field">
       <label className="fieldLabel">Orientation</label>
       <Dropdown
-        label="Sélectionner une orientation"
+        label={selectedOption?.label || "Sélectionner une orientation"}
         items={orientationOptions}
         onSelect={(item) => onChange(item.value)}
       />
@@ -32,12 +33,13 @@ export function QualitySelector({ value, onChange }) {
     { value: "mq", label: "Qualité moyenne (1080p)" },
     { value: "draft", label: "Brouillons" },
   ];
+  const selectedOption = qualityOptions.find((item) => item.value === value);
 
   return (
     <div className="field">
       <label className="fieldLabel">Qualité</label>
       <Dropdown
-        label="Sélectionner la qualité"
+        label={selectedOption?.label || "Sélectionner la qualité"}
         items={qualityOptions}
         onSelect={(item) => onChange(item.value)}
       />
@@ -51,12 +53,13 @@ export function CollectionSelector({ value, onChange, collections = [] }) {
     value: col.id,
     label: col.name,
   }));
+  const selectedOption = items.find((item) => item.value === value);
 
   return (
     <div className="field">
       <label className="fieldLabel">Collection</label>
       <Dropdown
-        label="Choisir une collection..."
+        label={selectedOption?.label || "Choisir une collection..."}
         items={items}
         onSelect={(item) => onChange(item.value)}
       />
