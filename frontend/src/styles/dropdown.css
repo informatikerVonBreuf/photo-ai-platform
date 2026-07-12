@@ -1,0 +1,296 @@
+
+/* ========================================
+   DROPDOWN COMPONENT - MODERN GLASSMORPHISM
+   ======================================== */
+
+.dd-wrapper {
+  position: relative;
+  display: inline-block;
+  min-width: 180px;
+  z-index: 3000;
+}
+
+.dd-wrapper.dd-compact {
+  width: 220px;
+}
+
+/* Header du dropdown */
+.dd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, rgba(255, 255, 255, 0.15));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    color-mix(in srgb, var(--accent2, var(--accent)) 12%, transparent)
+  );
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dd-header:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.2));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    color-mix(in srgb, var(--accent2, var(--accent)) 16%, transparent)
+  );
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.dd-header:active {
+  transform: scale(0.98);
+}
+
+.dd-label {
+  flex: 1;
+  text-align: left;
+}
+
+.dd-label-placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Icône flèche */
+.dd-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  flex-shrink: 0;
+}
+
+.dd-icon-open {
+  transform: rotate(180deg);
+}
+
+/* Menu déroulant */
+.dd-menu {
+  position: fixed;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 180px;
+  z-index: 6000;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, rgba(255, 255, 255, 0.15));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 28%, rgba(0, 0, 0, 0.55)),
+    color-mix(in srgb, var(--accent2, var(--accent)) 22%, rgba(0, 0, 0, 0.4))
+  );
+  backdrop-filter: blur(20px);
+  padding: 6px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: ddMenuOpen 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  overflow: hidden;
+}
+
+/* Animation d'apparition du menu */
+@keyframes ddMenuOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Items du dropdown */
+.dd-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.dd-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+  color: var(--accent);
+}
+
+.dd-item:active {
+  transform: translateX(1px) scale(0.98);
+}
+
+/* Champs date/heure avec style dropdown */
+.dd-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, rgba(255, 255, 255, 0.15));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    color-mix(in srgb, var(--accent2, var(--accent)) 12%, transparent)
+  );
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dd-input:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.2));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    color-mix(in srgb, var(--accent2, var(--accent)) 16%, transparent)
+  );
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.dd-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.dd-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+/* Datepicker (react-datepicker) */
+.dd-popper {
+  z-index: 7000 !important;
+}
+
+.dd-calendar {
+  font-family: var(--font-body);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 24%, rgba(0, 0, 0, 0.75)),
+    color-mix(in srgb, var(--accent2, var(--accent)) 18%, rgba(50, 38, 38, 0.6))
+  ) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, rgba(255, 255, 255, 0.15)) !important;
+  border-radius: 14px !important;
+  color: var(--text) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
+  overflow: hidden;
+}
+
+.dd-calendar .react-datepicker__header {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 26%, rgba(0, 0, 0, 0.8)),
+    color-mix(in srgb, var(--accent2, var(--accent)) 18%, rgba(0, 0, 0, 0.7))
+  ) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.dd-calendar .react-datepicker__current-month,
+.dd-calendar .react-datepicker__day-name,
+.dd-calendar .react-datepicker__time-name {
+  color: var(--text) !important;
+}
+
+.dd-calendar .react-datepicker__time-header {
+  color: #000000 !important;
+}
+
+.dd-calendar .react-datepicker__day,
+
+.dd-calendar .react-datepicker__time-list-item {
+  color: var(--text-secondary) !important;
+  border-radius: 8px;
+  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.dd-calendar .react-datepicker__day:hover,
+.dd-calendar .react-datepicker__time-list-item:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent) !important;
+}
+
+.dd-calendar .react-datepicker__day--selected,
+
+.dd-calendar .react-datepicker__day--keyboard-selected,
+
+.dd-calendar .react-datepicker__time-list-item--selected {
+  background: color-mix(in srgb, var(--accent) 65%, transparent) !important;
+  color: #fff !important;
+}
+
+.dd-calendar .react-datepicker__time-container {
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+  width: 90px !important;
+}
+
+.dd-calendar .react-datepicker__time-list {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 24%, rgba(0, 0, 0, 0.75)),
+    color-mix(in srgb, var(--accent2, var(--accent)) 18%, rgba(50, 38, 38, 0.6))
+  ) !important;
+}
+
+.dd-calendar .react-datepicker__time-list-item {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.dd-calendar .react-datepicker__navigation-icon::before {
+  border-color: var(--text) !important;
+}
+
+/* État vide */
+.dd-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .dd-wrapper {
+    min-width: auto;
+  }
+
+  .dd-header {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .dd-menu {
+    min-width: 160px;
+  }
+
+  .dd-item {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+}
