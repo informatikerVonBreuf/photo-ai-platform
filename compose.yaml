@@ -1,0 +1,191 @@
+name: photo-ai-platform
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app_private
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      PHOTO_AI_ENVIRONMENT: production
+      PHOTO_AI_LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PHOTO_AI_CORS_ORIGINS: '["http://127.0.0.1:${FRONTEND_PORT:-5173}","http://localhost:${FRONTEND_PORT:-5173}"]'
+      PHOTO_AI_STORAGE_DIR: /data/photos
+      PHOTO_AI_MODEL_REGISTRY_PATH: /config/model_registry.json
+      PHOTO_AI_EXTERNAL_NETWORK_ALLOWED: "false"
+      PHOTO_AI_OFFLINE_REQUIRED: "true"
+      PHOTO_AI_REQUIRE_INFRASTRUCTURE: "true"
+      PHOTO_AI_VLM_ENABLED: ${VLM_ENABLED:-false}
+      PHOTO_AI_POSTGRES_DSN: postgresql://photo_ai:${POSTGRES_PASSWORD:-change-me}@postgres:5432/photo_ai
+      PHOTO_AI_QDRANT_URL: http://qdrant:6333
+      PHOTO_AI_REDIS_URL: redis://:${REDIS_PASSWORD:-change-me}@redis:6379/0
+      PHOTO_AI_MINIO_URL: http://minio:9000
+      PHOTO_AI_MODEL_SERVER_URL: http://llama:8080
+      HF_HUB_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
+      DO_NOT_TRACK: "1"
+      OLLAMA_NO_CLOUD: "1"
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      - photo_storage:/data/photos
+      - ./ml/model_registry.json:/config/model_registry.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - app_private
+
+  postgres:
+    image: postgres:17.5-alpine
+    environment:
+      POSTGRES_DB: photo_ai
+      POSTGRES_USER: photo_ai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U photo_ai -d photo_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - app_private
+
+  qdrant:
+    image: qdrant/qdrant:v1.18.2
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-change-me}
+      QDRANT__TELEMETRY_DISABLED: "true"
+    ports:
+      - "127.0.0.1:${QDRANT_HTTP_PORT:-6333}:6333"
+      - "127.0.0.1:${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+      - qdrant_snapshots:/qdrant/snapshots
+    restart: unless-stopped
+    networks:
+      - app_private
+
+  redis:
+    image: redis:7.4.3-alpine
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:-change-me}"
+      ]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a '${REDIS_PASSWORD:-change-me}' ping | grep PONG"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - app_private
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-photo_ai}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-now}
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://127.0.0.1:9000/minio/health/live"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - app_private
+
+  llama:
+    image: ${LLAMA_CPP_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-b9445}
+    profiles:
+      - vlm
+    command:
+      - -m
+      - /models/${QWEN_MODEL_FILE:-qwen2.5-vl-3b-instruct-q4_k_m.gguf}
+      - --mmproj
+      - /models/${QWEN_MMPROJ_FILE:-mmproj-qwen2.5-vl-3b-instruct-f16.gguf}
+      - --alias
+      - qwen-vl
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --ctx-size
+      - "8192"
+      - --jinja
+    volumes:
+      - ./models/qwen-vl:/models:ro
+    restart: unless-stopped
+    networks:
+      - app_private
+
+networks:
+  app_private:
+    driver: bridge
+    internal: true
+
+volumes:
+  minio_data:
+  photo_storage:
+  postgres_data:
+  qdrant_data:
+  qdrant_snapshots:
+  redis_data:

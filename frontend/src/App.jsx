@@ -22,21 +22,9 @@ function RequireAuth({ children }) {
 
 const BG_MODELS = [
   { value: "none", label: "Aucun objet" },
-  { value: "/models/camera4.glb", label: "Surveillance" },
-  { value: "/models/camera5.glb", label: "Leica" },
-  { value: "/models/camera6.glb", label: "Canon" },
-  { value: "/models/camera7.glb", label: "Exacta" },
-  { value: "/models/camera11.glb", label: "Keystone" },
-  { value: "/models/camera12.glb", label: "Sniper" },
 ];
 
-function pickDefaultBgModel() {
-  const candidates = BG_MODELS.filter((m) => m.value !== "none");
-  const pick = candidates[Math.floor(Math.random() * candidates.length)];
-  return pick?.value || "none";
-}
-
-const DEFAULT_BG_MODEL = pickDefaultBgModel();
+const DEFAULT_BG_MODEL = "none";
 
 export default function App() {
   const [bgModel, setBgModel] = useState(DEFAULT_BG_MODEL);

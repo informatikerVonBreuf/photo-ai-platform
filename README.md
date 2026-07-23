@@ -1,171 +1,156 @@
 # Photo AI Platform
 
-Plateforme pour entreprises de photographie :
-- Upload & gestion d’albums
-- Recherche multimodale (texte ↔ image)
-- Regroupement personnes (option événementiel)
-- Scènes & moments
-- Livraison client (galeries privées)
-- Assistant intelligent (onboarding & commandes)
+Plateforme locale de gestion, de recherche et de regroupement de photographies.
+Le produit vise les photographes et les equipes qui doivent conserver le
+controle de leurs images, de leurs index et de leurs modeles.
 
-## Architecture (high level)
-Frontend → Backend API → (PostgreSQL, Vector DB, Object Storage, Model Server)
+## Capacites
 
-## Quickstart (dev)
-À venir : docker-compose + scripts de démarrage.
+- import et organisation de bibliotheques et de shootings ;
+- recherche texte -> image avec fusion lexicale et visuelle ;
+- recherche image -> image et filtre par personne ;
+- regroupement par metadonnees et graphe de similarite ;
+- enrichissement optionnel par modele vision-langage local ;
+- visualisation et validation des resultats dans le frontend.
 
-<<<<<<< Updated upstream
-## Datasets
-- COCO, Flickr30k, WIDER FACE, Places365 (liens dans /docs)
-=======
-Core workflows:
+## Etat du projet
 
-- create libraries and shootings,
-- search photos by text or reference image,
-- filter photos by metadata and tags,
-- explore similarity groups,
-- interact with an assistant layer,
-- prepare a future backend around storage, vectors and async jobs.
+Le frontend et les benchmarks ML sont fonctionnels. La fondation backend et
+l'infrastructure locale sont en cours d'integration.
 
-## Current Repository Structure
+Approches actuellement validees :
 
-```text
-photo-ai-platform/
-  frontend/                 React + Vite application
-  notebooks/                Research and experiment notebooks
-  ml/
-    experiments/            Lightweight reproducible ML benchmarks
-  docs/                     Architecture and decision documents
-  README.md                 Project overview
-  CONTRIBUTING.md           Contribution rules
-```
+- recherche hybride BM25 + OpenCLIP + RRF ;
+- reranking des prompts complexes avec contraintes positives et negatives ;
+- similarite image -> image ;
+- clustering par buckets de metadonnees et graphe mutual-kNN ;
+- assignation d'une categorie a chaque image, y compris les singletons.
 
-The `backend`, `infra` and deeper `ml` production modules are intentionally
-still open. The recommended next step is to add them only when the data model
-and runtime strategy are stable.
+Les notebooks de recherche historiques sont conserves. Les notebooks `02` et
+`ml/experiments/artifact_benchmark.py` servent de reference reproductible.
 
-## Recommended AI Strategy
-
-The original research notebooks explore a heavy pipeline:
-
-- BLIP captions,
-- OpenCLIP embeddings,
-- BM25 over captions,
-- Qdrant named vectors,
-- UMAP/HDBSCAN clustering,
-- optional local LLM enrichment.
-
-This remains useful for research, but it is expensive to maintain as the first
-production path.
-
-Recommended production-first approach:
-
-1. Store images and metadata.
-2. Compute one image embedding per photo.
-3. Store vectors in Qdrant.
-4. Search with vector similarity plus metadata filters.
-5. Build a lightweight graph from visual neighbors, time, shooting and people.
-6. Run captioning only as an asynchronous enrichment when needed.
-
-See [docs/approach-comparison.md](docs/approach-comparison.md).
-
-## Frontend Quickstart
-
-```bash
-cd frontend
-npm ci
-npm run dev
-```
-
-Open:
+## Architecture cible
 
 ```text
-http://127.0.0.1:5173/
+Frontend React
+    -> API FastAPI
+        -> PostgreSQL : metadonnees et jobs
+        -> Qdrant : vecteurs de recherche
+        -> stockage local/MinIO : images
+        -> Redis : file de traitements
+        -> workers ML locaux
+            -> OpenCLIP/SigLIP2
+            -> VLM local optionnel
 ```
 
-Build:
+Les modeles ne sont pas appeles via une API externe. Les poids sont stockes
+hors Git, verifies par checksum et charges depuis un chemin local.
 
-```bash
+## Structure
+
+```text
+backend/                  API FastAPI
+frontend/                 application React + Vite
+infra/                    configuration d'infrastructure
+ml/                       benchmarks et registre de modeles
+notebooks/                recherche organisee par capacite
+docs/                     architecture et decisions
+scripts/                  installation et audits
+compose.yaml              stack locale privee
+```
+
+## Demarrage du frontend
+
+```powershell
 cd frontend
-npm run lint
-npm run build
+npm.cmd ci
+npm.cmd run dev
 ```
 
-Note for Windows PowerShell: if `npm` is blocked by execution policy, use
-`npm.cmd`.
+Le frontend est disponible sur `http://127.0.0.1:5173`.
 
-## ML Experiments
+Par defaut il utilise les donnees de demonstration. Pour appeler le backend :
 
-Run the lightweight strategy benchmark:
-
-```bash
-python ml/experiments/photo_strategy_benchmark.py
-python ml/experiments/retrieval_strategy_benchmark.py
+```powershell
+$env:VITE_USE_MOCK = "false"
+$env:VITE_API_BASE = "http://127.0.0.1:8000"
+npm.cmd run dev
 ```
 
-Related notebooks:
+## Environnement ML
 
-- `notebooks/recherche_textuelle_texte_image/`
-- `notebooks/recherche_image_image/`
-- `notebooks/clustering_images/`
+```powershell
+.\scripts\setup_ml_env.ps1
+conda activate env
+python ml\experiments\artifact_benchmark.py --top-k 10 --text-batch-size 8
+```
 
-Existing notebooks are kept for historical research:
+Dans Jupyter, selectionner le kernel `Python (photo-ai-platform)`.
 
-- `notebooks/Recherche_textuelle-Clustering.ipynb`
-- `notebooks/test.ipynb`
-- `notebooks/filter_by_image (1).ipynb`
+Les rapports sont generes dans `reports/algorithm_tests/latest/` et ne sont pas
+versionnes.
 
-## Recommended Backend Shape
+## Stack locale
 
-Suggested services:
+Creer la configuration locale :
 
-- API: FastAPI or similar Python backend.
-- Database: PostgreSQL for libraries, shootings, photos and metadata.
-- Vector database: Qdrant for image embeddings.
-- Object storage: local filesystem in dev, S3-compatible storage in prod.
-- Jobs: worker queue for embeddings, graph refresh and optional captions.
+```powershell
+Copy-Item .env.example .env
+.\scripts\prepare_backend_wheels.ps1
+.\scripts\build_frontend_production.ps1
+docker compose config
+docker compose up --build
+```
 
-Suggested tables:
+Services :
 
-- `libraries`
-- `shootings`
-- `photos`
-- `photo_metadata`
-- `photo_edges`
-- `jobs`
+- frontend : `http://127.0.0.1:5173` ;
+- API : `http://127.0.0.1:8000` ;
+- documentation API : `http://127.0.0.1:8000/docs` ;
+- Qdrant : `http://127.0.0.1:6333` ;
+- console MinIO : `http://127.0.0.1:9001`.
 
-## Development Hygiene
+Le VLM est optionnel et ne demarre jamais automatiquement :
 
-- Keep notebooks versionable, but do not commit generated caches, datasets or
-  model weights.
-- Keep heavy model outputs in ignored folders such as `notebooks/cache/`,
-  `notebooks/outputs/`, `ml/runs/` or `ml/artifacts/`.
-- Prefer small reproducible scripts in `ml/experiments/` when comparing
-  approaches.
-- Move repeated frontend logic into hooks or shared UI components.
+```powershell
+docker compose --profile vlm up --build
+```
 
-## Current Status
+Avant cette commande, les poids GGUF et le projecteur multimodal doivent etre
+places dans `models/qwen-vl/` et declares dans `ml/model_registry.json`.
 
-Validated locally:
+## Confidentialite
 
-- `npm.cmd run lint`
-- `npm.cmd run build`
-- `python ml/experiments/photo_strategy_benchmark.py`
+La production doit respecter les regles suivantes :
 
-Known warning:
+- aucune image ni aucun prompt envoye vers un fournisseur externe ;
+- services de donnees non exposes publiquement ;
+- modeles charges uniquement depuis des fichiers locaux ;
+- telemetrie des bibliotheques desactivee ;
+- journaux sans contenu d'image ni donnees biometriques ;
+- sauvegardes chiffrees de PostgreSQL, Qdrant et du stockage objet.
 
-- The frontend bundle is large because the app includes 3D and AI-oriented
-  dependencies. Code splitting can be added later.
+Verifier le registre :
 
-## Next Milestones
+```powershell
+python scripts\verify_model_registry.py
+python scripts\verify_model_registry.py --strict
+```
 
-1. Define backend data model and API contracts.
-2. Implement photo upload and metadata extraction.
-3. Add Qdrant indexing for image embeddings.
-4. Add graph edge generation as an async job.
-5. Connect frontend search pages to real endpoints.
-6. Add captioning as an offline enrichment job.
->>>>>>> Stashed changes
+Le mode `--strict` est destine a la release et echoue tant que les roles
+obligatoires ne disposent pas de poids locaux verifies.
 
-## License
-TBD
+## Documentation
+
+- [Architecture produit](docs/product-search-architecture.md)
+- [Plan de mise en production](docs/production-local-first.md)
+- [Plan de recherche](docs/retrieval-production-plan.md)
+- [Organisation des notebooks](notebooks/README.md)
+- [Couche ML](ml/README.md)
+
+## Licence
+
+La licence du projet doit encore etre choisie. Les licences du code et des
+poids de chaque modele sont suivies separement dans
+`ml/model_registry.json`. Les poids InsightFace fournis publiquement ne sont
+pas approuves pour une production commerciale.

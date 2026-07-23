@@ -2,7 +2,16 @@
 __pycache__/
 *.pyc
 .venv/
+notebooks/.venv/
 .env
+.env.*
+!.env.example
+.ipynb_checkpoints/
+notebooks/**/.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Node
 node_modules/
@@ -15,12 +24,28 @@ datasets/
 models/
 *.pt
 *.onnx
+*.pth
+*.ckpt
+*.safetensors
+notebooks/cache/
+notebooks/data/raw/
+notebooks/data/generated/
+var/
+backend/data/
+backend/wheels/*
+!backend/wheels/.gitkeep
+*.sqlite
+*.sqlite3
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Logs
 *.log
+reports/algorithm_tests/
+reports/**/*.html
+reports/**/*.csv
 
 # infra 
 infra/.env.docker
