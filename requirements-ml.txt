@@ -1,0 +1,32 @@
+# Core benchmark/runtime
+numpy==2.2.6
+packaging>=24.2
+pillow
+matplotlib
+pandas
+scikit-learn
+tqdm
+
+# Local multimodal retrieval
+torch==2.13.0
+torchvision==0.28.0
+transformers
+sentence-transformers
+open_clip_torch==3.3.0
+rank-bm25
+qdrant-client
+
+# Image -> image / face filtering notebook
+opencv-python
+faiss-cpu
+insightface
+onnxruntime
+
+# Clustering research notebooks
+hdbscan
+umap-learn
+plotly
+
+# Optional local LLM judge / notebook tooling
+ollama
+ipykernel

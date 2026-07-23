@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "external_inference_allowed": false,
+    "automatic_model_downloads_allowed": false,
+    "required_production_roles": [
+      "retrieval"
+    ],
+    "weights_directory": "models"
+  },
+  "models": [
+    {
+      "id": "openclip-vit-l-14-openai",
+      "role": "retrieval",
+      "runtime": "open_clip",
+      "source": "timm/vit_large_patch14_clip_224.openai",
+      "revision": null,
+      "license": "verify_before_production",
+      "status": "research",
+      "approved_for_production": false,
+      "artifacts": [],
+      "notes": [
+        "Used by the current benchmark.",
+        "Resolve the QuickGELU configuration and regenerate every embedding before approval."
+      ]
+    },
+    {
+      "id": "salesforce-blip-image-captioning-base",
+      "role": "captioning",
+      "runtime": "transformers",
+      "source": "Salesforce/blip-image-captioning-base",
+      "revision": null,
+      "license": "bsd-3-clause",
+      "status": "research",
+      "approved_for_production": false,
+      "artifacts": [],
+      "notes": [
+        "Used to generate the existing caption cache.",
+        "Captioning remains an asynchronous enrichment."
+      ]
+    },
+    {
+      "id": "insightface-antelopev2",
+      "role": "face_retrieval",
+      "runtime": "onnxruntime",
+      "source": "deepinsight/insightface",
+      "revision": null,
+      "license": "non-commercial-research-weights",
+      "status": "blocked",
+      "approved_for_production": false,
+      "artifacts": [],
+      "notes": [
+        "The library code and pretrained weights have different licenses.",
+        "Do not enable this model in a commercial production deployment."
+      ]
+    },
+    {
+      "id": "llama-3.1-8b-ollama",
+      "role": "text_judge",
+      "runtime": "ollama",
+      "source": "ollama/library/llama3.1:8b",
+      "revision": "46e0c10c039e",
+      "license": "verify_before_production",
+      "status": "research",
+      "approved_for_production": false,
+      "artifacts": [],
+      "notes": [
+        "Used by historical notebooks with captions and metadata only.",
+        "Not part of the primary retrieval path."
+      ]
+    },
+    {
+      "id": "qwen2.5-vl-3b-instruct-gguf",
+      "role": "vlm_judge",
+      "runtime": "llama.cpp",
+      "source": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "revision": null,
+      "license": "verify_before_production",
+      "status": "proposed",
+      "approved_for_production": false,
+      "artifacts": [],
+      "notes": [
+        "Candidate for singleton review and cluster labelling.",
+        "Use local GGUF weights and a local multimodal projector.",
+        "Keep this model outside the synchronous search request path on CPU."
+      ]
+    }
+  ]
+}

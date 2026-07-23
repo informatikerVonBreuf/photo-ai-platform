@@ -1,29 +1,80 @@
-# ML Strategy
+# ML Layer
 
-This folder is for reusable ML experiments and production-oriented prototypes.
+Ce dossier contient le code qui transforme les notebooks en composants testables.
 
-The current recommendation for Photo AI Platform is:
+## Structure
 
-1. Start with image embeddings and vector search.
-2. Add metadata filters for library, shooting, date, orientation, dimensions and tags.
-3. Add a lightweight similarity graph for navigation, recommendations and optional cluster views.
-4. Keep caption generation and text clustering as an offline enrichment, not as the core runtime path.
+```text
+ml/
+  experiments/
+    artifact_benchmark.py
+```
 
-Why this order:
+`artifact_benchmark.py` est le runner principal pour comparer les approches:
 
-- It is easier to maintain than a full BLIP caption + BM25 + UMAP + HDBSCAN stack.
-- It scales naturally with a vector database such as Qdrant.
-- It supports text search later with CLIP text embeddings without forcing captions for every image.
-- It keeps expensive models out of the request path.
+- texte -> image,
+- image -> image,
+- clustering graphe.
 
-## Experiments
+Il utilise les artefacts locaux deja produits par les notebooks:
 
-- `experiments/photo_strategy_benchmark.py`: synthetic benchmark comparing text clustering, vector search, metadata facets and graph-based grouping.
-- `experiments/retrieval_strategy_benchmark.py`: task-specific benchmark for text-to-image, image-to-image and clustering strategies.
+```text
+notebooks/data/artifacts/captions_blip.json
+notebooks/data/artifacts/emb_img.npy
+notebooks/data/artifacts/emb_cap.npy
+notebooks/data/images/val2017/
+```
 
-Run:
+## Lancer le benchmark
+
+Installer/preparer l'environnement ML:
+
+```powershell
+.\scripts\setup_ml_env.ps1
+```
+
+Dans Jupyter, choisir le kernel:
+
+```text
+Python (photo-ai-platform)
+```
+
+Puis lancer:
 
 ```bash
-python ml/experiments/photo_strategy_benchmark.py
-python ml/experiments/retrieval_strategy_benchmark.py
+python ml/experiments/artifact_benchmark.py --top-k 10 --text-batch-size 8
+```
+
+Les rapports sont generes dans:
+
+```text
+reports/algorithm_tests/latest/
+```
+
+Ce dossier est ignore par Git.
+
+## Decision actuelle
+
+Pour la production, ne pas utiliser une recherche vector-only.
+
+Approche recommandee:
+
+```text
+metadata filters
++ BM25 captions/tags
++ OpenCLIP text->image
++ OpenCLIP text->caption
++ RRF fusion
++ dense prompt constraint rerank
++ OpenCLIP contrastive negative rerank
++ optional local reranker top-N
+```
+
+Pour le clustering:
+
+```text
+metadata/category buckets
++ mutual kNN visual graph
++ token consistency
++ connected components
 ```
