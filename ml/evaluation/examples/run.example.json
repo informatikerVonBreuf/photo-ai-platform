@@ -1,0 +1,24 @@
+{
+  "queries": [
+    {
+      "query_id": "food_table",
+      "stages": {
+        "lexical": ["food_exact", "bedroom_table"],
+        "text_image": ["food_ok", "mug_table"],
+        "rrf": ["food_exact", "food_ok", "mug_table", "bedroom_table"],
+        "judge": ["food_exact", "food_ok"],
+        "final": ["food_exact", "food_ok"]
+      }
+    },
+    {
+      "query_id": "no_match",
+      "stages": {
+        "lexical": [],
+        "text_image": ["near_but_wrong"],
+        "rrf": ["near_but_wrong"],
+        "judge": [],
+        "final": []
+      }
+    }
+  ]
+}

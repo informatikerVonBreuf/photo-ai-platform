@@ -1,0 +1,31 @@
+FROM python:3.12.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HF_HUB_OFFLINE=1 \
+    HF_HUB_DISABLE_TELEMETRY=1 \
+    HF_HUB_DISABLE_IMPLICIT_TOKEN=1 \
+    HF_HUB_DISABLE_PROGRESS_BARS=1 \
+    TRANSFORMERS_OFFLINE=1 \
+    DO_NOT_TRACK=1
+
+WORKDIR /app
+
+COPY requirements-service.txt .
+COPY wheels /wheels
+RUN pip install --no-cache-dir \
+        --no-index \
+        --find-links=/wheels \
+        -r requirements-service.txt
+
+RUN useradd --create-home --uid 10002 modeluser
+
+COPY --chown=modeluser:modeluser services ./ml/services
+RUN touch /app/ml/__init__.py
+
+USER modeluser
+
+EXPOSE 8001
+
+CMD ["uvicorn", "ml.services.embedding_service:app", "--host", "0.0.0.0", "--port", "8001"]

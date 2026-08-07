@@ -1,5 +1,5 @@
 param(
-    [string]$ApiBase = "http://127.0.0.1:8000"
+    [string]$ApiBase = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,4 +37,5 @@ finally {
     $env:VITE_USE_MOCK = $previousUseMock
 }
 
-Write-Host "Frontend de production construit avec API_BASE=$ApiBase"
+$displayApiBase = if ($ApiBase) { $ApiBase } else { "<same-origin>" }
+Write-Host "Frontend de production construit avec API_BASE=$displayApiBase"

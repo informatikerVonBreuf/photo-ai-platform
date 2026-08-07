@@ -105,7 +105,7 @@ query text
 -> dense prompt constraint rerank
 -> OpenCLIP contrastive negative rerank
 -> hard negative filter when query says no/without/sans
--> optional local reranker top-N
+-> optional local VLM verification of every RRF survivor, in bounded batches
 -> UI results
 ```
 
@@ -116,7 +116,7 @@ Pourquoi:
 - OpenCLIP text->caption aide quand les captions sont semantiquement proches.
 - RRF evite de calibrer les scores de canaux differents.
 - Le reranking par contraintes reduit les faux positifs sur les prompts longs.
-- Le LLM local doit etre un reranker ou un outil d'evaluation, pas le moteur de recall.
+- Le VLM local doit verifier la precision, pas devenir le moteur de recall.
 
 Pour un prompt dense, ne pas encoder toute la phrase comme un seul signal et
 faire confiance au score vectoriel. Le systeme doit identifier:
@@ -238,7 +238,7 @@ image upload accepte immediatement
 embedding en async
 clustering en batch async
 resultats pagines
-top-N rerank limite a 20-50 resultats
+pool de rappel calibre par Recall@K, puis sortie finale de taille variable
 ```
 
 ## Decision actuelle

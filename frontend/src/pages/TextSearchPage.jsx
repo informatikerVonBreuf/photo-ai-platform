@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
@@ -11,25 +12,20 @@ import { downloadClusterImages } from "../utils/downloadClusterImages";
 import Modal from "../ui/Modal";
 import FieldError from "../ui/FieldError";
 import Dropdown from "../components/Dropdown";
+import { listLibraries, listShootings, searchImages } from "../api/client";
 import "../styles/dropdown.css";
 
-const MOCK_LIBRARIES = [
-  { id: "lib1", name: "Mariages 2024" },
-  { id: "lib2", name: "Portraits Studio" },
-];
-
-const MOCK_SHOOTINGS = [
-  { id: "sh1", library_id: "lib1", name: "Mariage — Marie & Rochinel" },
-  { id: "sh2", library_id: "lib1", name: "Cérémonie — Église" },
-  { id: "sh3", library_id: "lib2", name: "Portrait — Corporate" },
-];
-
 export default function TextSearchPage() {
+  const [libraries, setLibraries] = useState([]);
+  const [shootings, setShootings] = useState([]);
   const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
   const [query, setQuery] = useState("");
+  const [resultLimit, setResultLimit] = useState("all");
+  const [useVlm, setUseVlm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
+  const [searchMeta, setSearchMeta] = useState(null);
   const [error, setError] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
@@ -43,7 +39,23 @@ export default function TextSearchPage() {
   const [albumError, setAlbumError] = useState("");
   const [shootingError, setShootingError] = useState("");
 
-  const canRun = useMemo(() => Boolean(libraryId) && query.trim().length > 0, [libraryId, query]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listLibraries(), listShootings()])
+      .then(([libraryResponse, shootingResponse]) => {
+        if (cancelled) return;
+        setLibraries(libraryResponse.libraries || []);
+        setShootings(shootingResponse.shootings || []);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "Impossible de charger les albums");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const canRun = useMemo(() => query.trim().length > 0, [query]);
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && canRun && !loading) {
@@ -55,63 +67,36 @@ export default function TextSearchPage() {
     if (!canRun) return;
     setLoading(true);
     setError(null);
+    setSearchMeta(null);
 
     try {
-      // Simulation d'erreur aléatoire (1 chance sur 3)
-      if (Math.random() < 0.33) {
-        throw new Error("Erreur de connexion au serveur");
-      }
-
-      // TODO: appeler ton backend /search-text avec scope + query
-      // Ici: mock results
-      await new Promise((r) => setTimeout(r, 500));
-      setResults([
-        { 
-          id: "p1", 
-          url: "https://picsum.photos/600/400?1", 
-          caption: "Photo de groupe",
-          name: "IMG_20260115_124530.jpg",
-          date: "15 janvier 2026",
-          dimensions: "4000 × 3000 px",
-          size: "2.4 MB",
-          format: "JPEG",
-          library: "Mariages 2024",
-          shooting: "Mariage — Marie & Rochinel",
-          tags: ["portrait", "groupe", "extérieur"],
-          score: 0.91 
-        },
-        { 
-          id: "p2", 
-          url: "https://picsum.photos/600/400?2", 
-          caption: "Cérémonie",
-          name: "IMG_20260115_140000.jpg",
-          date: "15 janvier 2026",
-          dimensions: "3840 × 2560 px",
-          size: "1.8 MB",
-          format: "JPEG",
-          library: "Mariages 2024",
-          shooting: "Mariage — Marie & Rochinel",
-          tags: ["cérémonie", "intérieur"],
-          score: 0.87 
-        },
-        { 
-          id: "p3", 
-          url: "https://picsum.photos/600/400?3", 
-          caption: "Danse",
-          name: "IMG_20260115_185000.jpg",
-          date: "15 janvier 2026",
-          dimensions: "4000 × 3000 px",
-          size: "2.2 MB",
-          format: "JPEG",
-          library: "Mariages 2024",
-          shooting: "Mariage — Marie & Rochinel",
-          tags: ["danse", "soirée", "ambiance"],
-          score: 0.82 
-        },
-      ]);
+      const response = await searchImages({
+        mode: "text",
+        query: query.trim(),
+        imageFiles: [],
+        libraryId: libraryId || undefined,
+        shootingId:
+          selectedShootings.length === 1
+            ? selectedShootings[0]
+            : undefined,
+        limit: resultLimit === "all" ? undefined : Number(resultLimit),
+        useVlm,
+      });
+      setResults(
+        (response.results || []).map((photo) => ({
+          ...photo,
+          caption:
+            photo.caption ||
+            photo.original_filename ||
+            "Image sans description",
+          name: photo.original_filename || "Image",
+        }))
+      );
+      setSearchMeta(response.diagnostics || null);
     } catch (err) {
       setError(err.message || "Erreur inconnue");
       setResults([]);
+      setSearchMeta(null);
     } finally {
       setLoading(false);
     }
@@ -183,11 +168,33 @@ export default function TextSearchPage() {
     await downloadClusterImages({ theme: "resultats-recherche-texte", photos: results });
   }
 
+  const vlmMode = searchMeta?.vlm_rerank?.mode;
+  const vlmSummary =
+    vlmMode === "verified"
+      ? `VLM : ${searchMeta.vlm_rerank.accepted}/${searchMeta.vlm_rerank.reviewed} retenues`
+      : vlmMode === "skipped_by_user"
+        ? "VLM désactivé"
+        : ["server_disabled", "unavailable", "disabled"].includes(vlmMode)
+          ? "VLM indisponible, filtre textuel appliqué"
+          : ["busy", "cooldown"].includes(vlmMode)
+            ? "VLM occupé, filtre textuel appliqué"
+            : vlmMode === "failed_open"
+              ? "VLM interrompu, filtre textuel appliqué"
+              : null;
+  const totalMs = searchMeta?.stage_timings_ms?.total;
+  const resultSummary = [
+    searchMeta ? `${results.length} photo(s)` : null,
+    vlmSummary,
+    Number.isFinite(totalMs) ? `${Math.round(totalMs)} ms` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="pageGrid">
       <div className="fullRow">
         <div className="welcome">
-          <Tooltip text="Décris ce que tu cherches, puis sélectionne une bibliothèque et ses shootings pour lancer la recherche" position="right">
+          <Tooltip text="Décris ce que tu cherches. La bibliothèque et le shooting sont des filtres optionnels." position="right">
             <div className="welcomeTitle">Recherche par texte</div>
           </Tooltip>
         </div>
@@ -195,8 +202,8 @@ export default function TextSearchPage() {
 
       <div className="leftCol">
         <ScopePicker
-          libraries={MOCK_LIBRARIES}
-          shootings={MOCK_SHOOTINGS}
+          libraries={libraries}
+          shootings={shootings}
           libraryId={libraryId}
           setLibraryId={setLibraryId}
           selectedShootings={selectedShootings}
@@ -211,9 +218,51 @@ export default function TextSearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="ex: photos de groupe, cérémonie, danse…"
+              placeholder="ex : personnes jouant au football sous la pluie"
             />
           </label>
+
+          <div className="searchOptions">
+            <div className="searchOptionRow">
+              <span className="searchOptionLabel">Résultats</span>
+              <div className="toggle" role="group" aria-label="Nombre de résultats">
+                {["all", "10", "20", "50"].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`toggleBtn ${resultLimit === value ? "on" : ""}`}
+                    aria-pressed={resultLimit === value}
+                    onClick={() => setResultLimit(value)}
+                  >
+                    {value === "all" ? "Tous" : value}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="searchOptionRow">
+              <div className="searchOptionLabel">
+                Vérification VLM
+                <Tooltip
+                  text="Vérifie directement les images après la fusion RRF."
+                  position="top"
+                >
+                  <span className="infoIcon">i</span>
+                </Tooltip>
+              </div>
+              <label className="searchSwitch">
+                <input
+                  type="checkbox"
+                  checked={useVlm}
+                  onChange={(event) => setUseVlm(event.target.checked)}
+                  aria-label="Activer la vérification VLM"
+                />
+                <span className="searchSwitchTrack" aria-hidden="true">
+                  <span className="searchSwitchThumb" />
+                </span>
+              </label>
+            </div>
+          </div>
 
           <button className="btn primary" disabled={!canRun || loading} onClick={run}>
             {loading ? (
@@ -223,7 +272,8 @@ export default function TextSearchPage() {
               </>
             ) : (
               <>
-                🔍 Lancer la recherche
+                <MagnifyingGlass size={18} />
+                Lancer la recherche
               </>
             )}
           </button>
@@ -243,7 +293,7 @@ export default function TextSearchPage() {
             <div>
               <div className="cardTitle">Résultats</div>
               <div className="cardSub">
-                {results.length ? `${results.length} photo(s)` : ""}
+                {resultSummary}
               </div>
             </div>
             <button className="btn" disabled={!results.length} onClick={handleDownloadResults}>
@@ -363,7 +413,7 @@ export default function TextSearchPage() {
             <Dropdown
               label="Choisis un album"
               className="dd-compact"
-              items={MOCK_LIBRARIES.map((lib) => ({
+              items={libraries.map((lib) => ({
                 value: lib.id,
                 label: lib.name,
               }))}

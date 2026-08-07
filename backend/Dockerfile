@@ -15,6 +15,7 @@ RUN useradd --create-home --uid 10001 appuser \
     && chown -R appuser:appuser /data/photos /app
 
 COPY --chown=appuser:appuser app ./app
+COPY --chown=appuser:appuser smoke_stack.py .
 
 USER appuser
 

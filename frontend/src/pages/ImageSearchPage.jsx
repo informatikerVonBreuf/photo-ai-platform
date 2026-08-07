@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import ScopePicker from "../ui/ScopePicker";
 import HistoryPanel from "../ui/HistoryPanel";
 import RatingStars from "../ui/RatingStars";
@@ -11,20 +12,12 @@ import { downloadClusterImages } from "../utils/downloadClusterImages";
 import Modal from "../ui/Modal";
 import FieldError from "../ui/FieldError";
 import Dropdown from "../components/Dropdown";
+import { listLibraries, listShootings, searchImages } from "../api/client";
 import "../styles/dropdown.css";
 
-const MOCK_LIBRARIES = [
-  { id: "lib1", name: "Mariages 2024" },
-  { id: "lib2", name: "Portraits Studio" },
-];
-
-const MOCK_SHOOTINGS = [
-  { id: "sh1", library_id: "lib1", name: "Mariage — Marie & Rochinel" },
-  { id: "sh2", library_id: "lib1", name: "Cérémonie — Église" },
-  { id: "sh3", library_id: "lib2", name: "Portrait — Corporate" },
-];
-
 export default function ImageSearchPage() {
+  const [libraries, setLibraries] = useState([]);
+  const [shootings, setShootings] = useState([]);
   const [libraryId, setLibraryId] = useState("");
   const [selectedShootings, setSelectedShootings] = useState([]);
   const [refFiles, setRefFiles] = useState([]);
@@ -44,7 +37,23 @@ export default function ImageSearchPage() {
   const [albumError, setAlbumError] = useState("");
   const [shootingError, setShootingError] = useState("");
 
-  const canRun = useMemo(() => Boolean(libraryId) && refFiles.length > 0, [libraryId, refFiles]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listLibraries(), listShootings()])
+      .then(([libraryResponse, shootingResponse]) => {
+        if (cancelled) return;
+        setLibraries(libraryResponse.libraries || []);
+        setShootings(shootingResponse.shootings || []);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "Impossible de charger les albums");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const canRun = useMemo(() => refFiles.length > 0, [refFiles]);
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && canRun && !loading) {
@@ -58,17 +67,26 @@ export default function ImageSearchPage() {
     setError(null);
 
     try {
-      // Simulation d'erreur aléatoire (1 chance sur 3)
-      if (Math.random() < 0.33) {
-        throw new Error("Erreur de connexion au serveur");
-      }
-
-      // TODO: ton endpoint /search-image
-      await new Promise((r) => setTimeout(r, 600));
-      setResults([
-        { id: "p1", url: "https://picsum.photos/600/400?7", caption: "Portrait", score: 0.93 },
-        { id: "p2", url: "https://picsum.photos/600/400?8", caption: "Portrait 2", score: 0.88 },
-      ]);
+      const response = await searchImages({
+        mode: "image",
+        query: "",
+        imageFiles: refFiles,
+        libraryId: libraryId || undefined,
+        shootingId:
+          selectedShootings.length === 1
+            ? selectedShootings[0]
+            : undefined,
+        referenceLogic: logic,
+      });
+      setResults(
+        (response.results || []).map((photo) => ({
+          ...photo,
+          caption:
+            photo.caption ||
+            photo.original_filename ||
+            "Image similaire",
+        }))
+      );
     } catch (err) {
       setError(err.message || "Erreur inconnue");
       setResults([]);
@@ -147,15 +165,15 @@ export default function ImageSearchPage() {
     <div className="pageGrid">
       <div className="fullRow">
               <div className="welcome">
-                <Tooltip text="Sélectionne les visages de référence, indique l’album et/ou le shooting dans lequel effectuer la recherche, puis lance-la." position="right">
+                <Tooltip text="Sélectionne une ou plusieurs images de référence. L’album et le shooting sont des filtres optionnels." position="right">
                   <div className="welcomeTitle">Recherche par image</div>
                 </Tooltip>
               </div>
             </div>
       <div className="leftCol">
         <ScopePicker
-          libraries={MOCK_LIBRARIES}
-          shootings={MOCK_SHOOTINGS}
+          libraries={libraries}
+          shootings={shootings}
           libraryId={libraryId}
           setLibraryId={setLibraryId}
           selectedShootings={selectedShootings}
@@ -210,12 +228,15 @@ export default function ImageSearchPage() {
           </div>
 
           <button className="btn primary" disabled={!canRun || loading} onClick={run}>
-            {loading ? "Recherche..." : "Lancer la recherche"}
+            {loading ? (
+              "Recherche..."
+            ) : (
+              <>
+                <MagnifyingGlass size={18} />
+                Lancer la recherche
+              </>
+            )}
           </button>
-          
-          <div className="mutedSmall">
-            (Prochain step) Ajouter un sélecteur “Choisir une photo depuis la library”.
-          </div>
         </div>
       </div>
 
@@ -349,7 +370,7 @@ export default function ImageSearchPage() {
             <Dropdown
               label="Choisis un album"
               className="dd-compact"
-              items={MOCK_LIBRARIES.map((lib) => ({
+              items={libraries.map((lib) => ({
                 value: lib.id,
                 label: lib.name,
               }))}

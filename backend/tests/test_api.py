@@ -22,6 +22,27 @@ def test_settings_reject_external_service() -> None:
         raise AssertionError("External endpoint should have been rejected")
 
 
+def test_settings_reject_external_embedding_service() -> None:
+    try:
+        Settings(embedding_service_url="https://models.example.com")
+    except ValueError as exc:
+        assert "External service endpoints are forbidden" in str(exc)
+    else:
+        raise AssertionError("External model endpoint should have been rejected")
+
+
+def test_vector_search_requires_local_embedding_service() -> None:
+    try:
+        Settings(
+            vector_search_enabled=True,
+            embedding_service_enabled=False,
+        )
+    except ValueError as exc:
+        assert "requires embedding_service_enabled" in str(exc)
+    else:
+        raise AssertionError("Vector search should require the embedding service")
+
+
 def test_health_privacy_and_registry(tmp_path: Path) -> None:
     settings = Settings(
         environment="test",
@@ -43,6 +64,41 @@ def test_health_privacy_and_registry(tmp_path: Path) -> None:
         registry = client.get("/api/v1/system/models")
         assert registry.status_code == 200
         assert registry.json()["external_inference_allowed"] is False
+
+
+def test_optional_vlm_does_not_block_api_readiness(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    async def healthy_tcp_check(url: str, default_port: int):
+        return {"ok": True, "host": "local", "port": default_port}
+
+    async def loading_vlm(url: str, **kwargs):
+        return {
+            "ok": False,
+            "host": "llama",
+            "port": 8080,
+            "status_code": 503,
+            "detail": {"error": {"message": "Loading model"}},
+        }
+
+    monkeypatch.setattr("backend.app.api.tcp_check", healthy_tcp_check)
+    monkeypatch.setattr("backend.app.api.http_health_check", loading_vlm)
+    settings = Settings(
+        environment="test",
+        storage_dir=tmp_path,
+        model_registry_path=ROOT / "ml" / "model_registry.json",
+        require_infrastructure=True,
+        vlm_enabled=True,
+    )
+
+    with TestClient(create_app(settings)) as client:
+        response = client.get("/health/ready")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+    assert response.json()["degraded"] == ["vlm"]
+    assert response.json()["checks"]["vlm"]["required"] is False
 
 
 def test_upload_verified_image(tmp_path: Path) -> None:

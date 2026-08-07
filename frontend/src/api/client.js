@@ -1,8 +1,45 @@
 // src/api/client.js
 import { MOCK_CLUSTER_RESULT, MOCK_SHOOTINGS } from "./mockData";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-const USE_MOCK = (import.meta.env.VITE_USE_MOCK || "true") === "true";
+const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+const USE_MOCK = (import.meta.env.VITE_USE_MOCK || "false") === "true";
+
+function apiMediaUrl(value) {
+  if (!value || /^(https?:|blob:|data:)/i.test(value)) return value;
+  return `${API_BASE}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+function normalizePhotos(payload) {
+  return {
+    ...payload,
+    results: (payload?.results || []).map((photo) => ({
+      ...photo,
+      url: apiMediaUrl(photo.url),
+    })),
+    images: (payload?.images || []).map((photo) => ({
+      ...photo,
+      url: apiMediaUrl(photo.url),
+    })),
+  };
+}
+
+function normalizePhoto(photo) {
+  return {
+    ...photo,
+    url: apiMediaUrl(photo.url),
+    name: photo.original_filename || photo.name || "Image",
+    dimensions:
+      photo.width && photo.height ? `${photo.width} × ${photo.height}` : undefined,
+    size:
+      Number.isFinite(photo.byte_size) && photo.byte_size >= 0
+        ? `${(photo.byte_size / 1024 / 1024).toFixed(2)} MB`
+        : undefined,
+    format: photo.content_type,
+    library: photo.library_name,
+    shooting: photo.shooting_name,
+    description: photo.caption,
+  };
+}
 
 /** -----------------------------
  * Auth
@@ -101,10 +138,24 @@ async function request(
 /** =========================================================
  * SEARCH
  * ========================================================= */
-export async function searchImages({ mode, query, imageFiles }) {
+export async function searchImages({
+  mode,
+  query,
+  imageFiles,
+  libraryId,
+  shootingId,
+  referenceLogic = "rrf",
+  limit,
+  useVlm = false,
+}) {
   const formData = new FormData();
   formData.append("mode", mode);
   formData.append("query", query || "");
+  formData.append("reference_logic", referenceLogic);
+  if (libraryId) formData.append("library_id", libraryId);
+  if (shootingId) formData.append("shooting_id", shootingId);
+  if (Number.isInteger(limit)) formData.append("limit", String(limit));
+  formData.append("use_vlm", String(useVlm));
 
   if (imageFiles?.length) {
     imageFiles.forEach((file) => formData.append("images", file));
@@ -112,11 +163,12 @@ export async function searchImages({ mode, query, imageFiles }) {
 
   if (USE_MOCK) return { results: [] };
 
-  return await request("/search", {
+  const response = await request("/api/v1/search", {
     method: "POST",
     body: formData,
-    timeoutMs: 60000,
+    timeoutMs: 240000,
   });
+  return normalizePhotos(response);
 }
 
 export async function uploadImages(files, { libraryId } = {}) {
@@ -131,10 +183,120 @@ export async function uploadImages(files, { libraryId } = {}) {
     return { images: [] };
   }
 
-  return await request("/upload", {
+  const response = await request("/api/v1/photos/upload", {
     method: "POST",
     body: formData,
     timeoutMs: 600000, // upload peut être long
+  });
+  return normalizePhotos(response);
+}
+
+/** =========================================================
+ * LIBRARIES / PHOTOS / INDEXING
+ * ========================================================= */
+export async function listLibraries() {
+  if (USE_MOCK) return { libraries: [] };
+  return await request("/api/v1/libraries", { method: "GET", timeoutMs: 30000 });
+}
+
+export async function createLibrary(payload) {
+  if (USE_MOCK) {
+    return { id: `mock_library_${Date.now()}`, ...payload, status: "READY" };
+  }
+  return await request("/api/v1/libraries", {
+    method: "POST",
+    body: payload,
+    timeoutMs: 30000,
+  });
+}
+
+export async function deleteLibrary(libraryId) {
+  if (USE_MOCK) return { ok: true };
+  return await request(`/api/v1/libraries/${encodeURIComponent(libraryId)}`, {
+    method: "DELETE",
+    timeoutMs: 30000,
+  });
+}
+
+export async function assignPhotosToLibrary(photoIds, libraryId) {
+  if (USE_MOCK) {
+    return { photos: [], count: photoIds.length, job_ids: [] };
+  }
+  return await request("/api/v1/photos/assign", {
+    method: "POST",
+    body: {
+      photo_ids: photoIds,
+      library_id: libraryId || null,
+    },
+    timeoutMs: 60000,
+  });
+}
+
+export async function deletePhoto(photoId) {
+  if (USE_MOCK) return { deleted: 1, files_deleted: 0 };
+  return await request(`/api/v1/photos/${encodeURIComponent(photoId)}`, {
+    method: "DELETE",
+    timeoutMs: 60000,
+  });
+}
+
+export async function clearLibraryPhotos(libraryId) {
+  if (USE_MOCK) return { deleted: 0, files_deleted: 0 };
+  return await request(
+    `/api/v1/libraries/${encodeURIComponent(libraryId)}/photos`,
+    {
+      method: "DELETE",
+      timeoutMs: 60000,
+    }
+  );
+}
+
+export async function clearUnassignedPhotos() {
+  if (USE_MOCK) return { deleted: 0, files_deleted: 0 };
+  return await request("/api/v1/photos/unassigned", {
+    method: "DELETE",
+    timeoutMs: 60000,
+  });
+}
+
+export async function listPhotos({
+  libraryId,
+  shootingId,
+  status,
+  limit = 500,
+  offset = 0,
+} = {}) {
+  if (USE_MOCK) return { photos: [], count: 0, limit, offset };
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  if (libraryId) params.set("library_id", libraryId);
+  if (shootingId) params.set("shooting_id", shootingId);
+  if (status) params.set("status", status);
+  const response = await request(`/api/v1/photos?${params.toString()}`, {
+    method: "GET",
+    timeoutMs: 30000,
+  });
+  return {
+    ...response,
+    photos: (response?.photos || []).map(normalizePhoto),
+  };
+}
+
+export async function getIndexStatus() {
+  if (USE_MOCK) {
+    return {
+      counts: { TOTAL: 0 },
+      indexer_enabled: false,
+      searchable: 0,
+      pending: 0,
+      failed: 0,
+    };
+  }
+  return await request("/api/v1/index/status", {
+    method: "GET",
+    timeoutMs: 30000,
   });
 }
 
@@ -181,7 +343,7 @@ export async function submitRatingComment({ featureName, rating, comment }) {
  * ========================================================= */
 export async function listShootings() {
   if (USE_MOCK) return { shootings: MOCK_SHOOTINGS };
-  return await request("/shootings", { method: "GET", timeoutMs: 30000 });
+  return await request("/api/v1/shootings", { method: "GET", timeoutMs: 30000 });
 }
 
 /** (Optionnel utile plus tard) */
@@ -189,12 +351,12 @@ export async function createShooting(payload) {
   if (USE_MOCK) {
     return { id: `mock_${Date.now()}`, ...payload, status: "UPLOADING" };
   }
-  return await request("/shootings", { method: "POST", body: payload, timeoutMs: 30000 });
+  return await request("/api/v1/shootings", { method: "POST", body: payload, timeoutMs: 30000 });
 }
 
 export async function deleteShooting(shootingId) {
   if (USE_MOCK) return { ok: true };
-  return await request(`/shootings/${shootingId}`, { method: "DELETE", timeoutMs: 30000 });
+  return await request(`/api/v1/shootings/${shootingId}`, { method: "DELETE", timeoutMs: 30000 });
 }
 
 /** =========================================================
@@ -217,7 +379,7 @@ export async function getJob(jobId) {
     return { status: "DONE", progress: 1.0, message: "Clustering terminé (mock)" };
   }
 
-  return await request(`/jobs/${jobId}`, { method: "GET", timeoutMs: 30000 });
+  return await request(`/api/v1/jobs/${jobId}`, { method: "GET", timeoutMs: 30000 });
 }
 
 export async function getClusterResult(shootingId) {

@@ -1,0 +1,17 @@
+{
+  "queries": [
+    {
+      "query_id": "food_table",
+      "query": "food on the table",
+      "relevance": {
+        "food_exact": 2,
+        "food_ok": 1
+      }
+    },
+    {
+      "query_id": "no_match",
+      "query": "a scene absent from the library",
+      "relevance": {}
+    }
+  ]
+}

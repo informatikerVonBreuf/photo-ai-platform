@@ -44,8 +44,16 @@ Notebook de benchmark/production:
 notebooks/recherche_textuelle_texte_image/02_benchmark_texte_image_open_source.ipynb
 ```
 
+Notebook d'evaluation produit:
+
+```text
+notebooks/recherche_textuelle_texte_image/03_evaluation_rag_multimodal.ipynb
+```
+
 Le notebook `02` execute le runner actuel `ml/experiments/artifact_benchmark.py`
 et compare les canaux BM25, OpenCLIP, RRF, linear fusion et deux-stage rerank.
+Le notebook `03` calcule les metriques par etape a partir de qrels humains et
+visualise la perte de rappel entre RRF, juge et sortie finale.
 
 ## Clustering
 

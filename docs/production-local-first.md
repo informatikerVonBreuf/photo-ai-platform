@@ -19,6 +19,23 @@ worker ML
 VLM optionnel
 ```
 
+## Etat implemente
+
+```text
+upload verifie
+-> fichier local par SHA-256
+-> photo + job idempotent PostgreSQL
+-> notification Redis
+-> worker TinyCLIP local
+-> vecteur image Qdrant
+-> recherche lexicale + dense
+-> fusion RRF
+```
+
+Ce parcours est couvert par `backend/smoke_stack.py`, y compris une requete
+texte longue et une recherche image -> image. Le clustering, les captions,
+les miniatures et le filtre facial constituent les prochains workers.
+
 Seuls le frontend et l'API sont destines a etre exposes par le reverse proxy.
 Les autres services restent sur le reseau prive Docker. Les ports publies par
 le Compose de developpement sont lies a `127.0.0.1`.
@@ -37,27 +54,50 @@ Un modele n'est approuve pour la production que si :
 Le fichier `ml/model_registry.json` est la source de verite. Les poids ne sont
 jamais commits dans Git.
 
+Le candidat actuel est TinyCLIP 8M/3M. Sa revision et les quatre SHA-256 sont
+figes, et son service a ete valide hors ligne. Il n'est volontairement pas
+`approved_for_production` tant que la pertinence sur le jeu produit et la
+licence pour l'usage final ne sont pas signees.
+
 ## Chemin d'inference
 
-La recherche interactive ne doit pas attendre un VLM :
+Le chemin interactif par defaut reste rapide :
 
 ```text
 filtres metadata
--> BM25
--> retrieval visuel
+-> index lexical PostgreSQL
+-> retrieval TinyCLIP/Qdrant
 -> RRF
--> reranking de contraintes
+-> filtre de couverture des concepts
 -> resultats
 ```
 
-Le VLM intervient en asynchrone pour :
+Quand `VLM_ENABLED=true` et que la requete demande `use_vlm=true`, un dernier
+etage optionnel examine tous les survivants RRF avant la reponse :
+
+```text
+pool hybride de taille variable
+-> requetes locales SmolVLM-500M par lots via llama.cpp
+-> jugement JSON contraint par candidat
+-> seuil de confiance
+-> resultats confirmes
+```
+
+Le VLM intervient aussi en asynchrone pour :
 
 - nommer un cluster ;
 - verifier un rattachement ambigu de singleton ;
 - enrichir une caption ;
 - analyser les echecs du benchmark.
 
-Sur une machine CPU-only, cette separation protege la latence de recherche.
+Sur cette machine CPU-only, SmolVLM-500M prend environ 9 secondes par image,
+contre environ 75 secondes par image pour Qwen2.5-VL 3B au profil 384 tokens.
+Le jugement synchrone reste donc optionnel et intervient uniquement apres le
+rappel hybride et le filtre de preuves. La taille de lot limite la memoire mais
+pas le nombre total de resultats examines. Pour un grand ensemble, la tache
+complete doit passer dans la file asynchrone plutot que couper arbitrairement
+les resultats. Qwen 3B reste une reference asynchrone; les 7B sont reserves a
+un futur benchmark GPU.
 
 ## Donnees et reseau
 

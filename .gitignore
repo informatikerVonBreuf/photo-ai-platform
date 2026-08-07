@@ -10,6 +10,7 @@ notebooks/.venv/
 notebooks/**/.ipynb_checkpoints/
 .pytest_cache/
 .ruff_cache/
+tmp/
 .coverage
 htmlcov/
 
@@ -34,6 +35,8 @@ var/
 backend/data/
 backend/wheels/*
 !backend/wheels/.gitkeep
+ml/wheels/*
+!ml/wheels/.gitkeep
 *.sqlite
 *.sqlite3
 

@@ -24,7 +24,7 @@ jobs:
       - name: Run backend tests
         run: python -m pytest backend/tests
       - name: Compile Python sources
-        run: python -m compileall -q backend scripts ml/experiments
+        run: python -m compileall -q backend scripts ml
       - name: Prepare Linux wheels for the container
         run: |
           python -m pip download \
@@ -67,4 +67,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate Compose
-        run: docker compose config --quiet
+        run: docker compose --profile ml --profile vlm config --quiet

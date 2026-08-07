@@ -36,7 +36,6 @@ export default function LoginPage() {
             </label>
 
             <button className="btn primary">Se connecter</button>
-            <div className="mutedSmall">(Dev) Login simulé. JWT + logs ensuite.</div>
           </form>
         </div>
       </div>
