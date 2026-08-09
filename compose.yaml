@@ -1,5 +1,40 @@
 name: photo-ai-platform
 
+x-backend-environment: &backend-environment
+  PHOTO_AI_ENVIRONMENT: production
+  PHOTO_AI_LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  PHOTO_AI_STORAGE_DIR: /data/photos
+  PHOTO_AI_MODEL_REGISTRY_PATH: /config/model_registry.json
+  PHOTO_AI_EXTERNAL_NETWORK_ALLOWED: "false"
+  PHOTO_AI_OFFLINE_REQUIRED: "true"
+  PHOTO_AI_REQUIRE_INFRASTRUCTURE: "true"
+  PHOTO_AI_PERSISTENCE_ENABLED: "true"
+  PHOTO_AI_QUEUE_ENABLED: "true"
+  PHOTO_AI_EMBEDDING_SERVICE_ENABLED: ${EMBEDDING_SERVICE_ENABLED:-false}
+  PHOTO_AI_VECTOR_SEARCH_ENABLED: ${EMBEDDING_SERVICE_ENABLED:-false}
+  PHOTO_AI_VLM_ENABLED: ${VLM_ENABLED:-false}
+  PHOTO_AI_POSTGRES_DSN: postgresql://photo_ai:${POSTGRES_PASSWORD:-change-me}@postgres:5432/photo_ai
+  PHOTO_AI_QDRANT_URL: http://qdrant:6333
+  PHOTO_AI_QDRANT_API_KEY: ${QDRANT_API_KEY:-change-me}
+  PHOTO_AI_QDRANT_COLLECTION: ${QDRANT_COLLECTION:-photos_tinyclip_v1}
+  PHOTO_AI_TEXT_VECTOR_SCORE_THRESHOLD: ${TEXT_VECTOR_SCORE_THRESHOLD:-0.28}
+  PHOTO_AI_TEXT_VECTOR_RELATIVE_MARGIN: ${TEXT_VECTOR_RELATIVE_MARGIN:-0.06}
+  PHOTO_AI_IMAGE_VECTOR_SCORE_THRESHOLD: ${IMAGE_VECTOR_SCORE_THRESHOLD:-0.40}
+  PHOTO_AI_VLM_MODEL_ALIAS: ${VLM_MODEL_ALIAS:-smolvlm-500m}
+  PHOTO_AI_VLM_JUDGE_BATCH_SIZE: ${VLM_JUDGE_BATCH_SIZE:-1}
+  PHOTO_AI_VLM_RELEVANCE_THRESHOLD: ${VLM_RELEVANCE_THRESHOLD:-0.70}
+  PHOTO_AI_VLM_TIMEOUT_SECONDS: ${VLM_TIMEOUT_SECONDS:-240}
+  PHOTO_AI_VLM_COOLDOWN_SECONDS: ${VLM_COOLDOWN_SECONDS:-90}
+  PHOTO_AI_REDIS_URL: redis://:${REDIS_PASSWORD:-change-me}@redis:6379/0
+  PHOTO_AI_MINIO_URL: http://minio:9000
+  PHOTO_AI_EMBEDDING_SERVICE_URL: http://embedding:8001
+  PHOTO_AI_MODEL_SERVER_URL: http://llama:8080
+  HF_HUB_OFFLINE: "1"
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
+  DO_NOT_TRACK: "1"
+  OLLAMA_NO_CLOUD: "1"
+
 services:
   frontend:
     build:
@@ -12,30 +47,14 @@ services:
     restart: unless-stopped
     networks:
       - app_private
+      - app_edge
 
   api:
     build:
       context: ./backend
     environment:
-      PHOTO_AI_ENVIRONMENT: production
-      PHOTO_AI_LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      <<: *backend-environment
       PHOTO_AI_CORS_ORIGINS: '["http://127.0.0.1:${FRONTEND_PORT:-5173}","http://localhost:${FRONTEND_PORT:-5173}"]'
-      PHOTO_AI_STORAGE_DIR: /data/photos
-      PHOTO_AI_MODEL_REGISTRY_PATH: /config/model_registry.json
-      PHOTO_AI_EXTERNAL_NETWORK_ALLOWED: "false"
-      PHOTO_AI_OFFLINE_REQUIRED: "true"
-      PHOTO_AI_REQUIRE_INFRASTRUCTURE: "true"
-      PHOTO_AI_VLM_ENABLED: ${VLM_ENABLED:-false}
-      PHOTO_AI_POSTGRES_DSN: postgresql://photo_ai:${POSTGRES_PASSWORD:-change-me}@postgres:5432/photo_ai
-      PHOTO_AI_QDRANT_URL: http://qdrant:6333
-      PHOTO_AI_REDIS_URL: redis://:${REDIS_PASSWORD:-change-me}@redis:6379/0
-      PHOTO_AI_MINIO_URL: http://minio:9000
-      PHOTO_AI_MODEL_SERVER_URL: http://llama:8080
-      HF_HUB_OFFLINE: "1"
-      HF_HUB_DISABLE_TELEMETRY: "1"
-      HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
-      DO_NOT_TRACK: "1"
-      OLLAMA_NO_CLOUD: "1"
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
@@ -65,6 +84,33 @@ services:
     restart: unless-stopped
     networks:
       - app_private
+      - app_edge
+
+  worker:
+    build:
+      context: ./backend
+    profiles:
+      - ml
+    command: ["python", "-m", "app.worker"]
+    environment:
+      <<: *backend-environment
+      PHOTO_AI_EMBEDDING_SERVICE_ENABLED: "true"
+      PHOTO_AI_VECTOR_SEARCH_ENABLED: "true"
+    volumes:
+      - photo_storage:/data/photos
+      - ./ml/model_registry.json:/config/model_registry.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      embedding:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app_private
 
   postgres:
     image: postgres:17.5-alpine
@@ -76,6 +122,7 @@ services:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/app/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U photo_ai -d photo_ai"]
       interval: 10s
@@ -99,6 +146,7 @@ services:
     restart: unless-stopped
     networks:
       - app_private
+      - app_edge
 
   redis:
     image: redis:7.4.3-alpine
@@ -134,8 +182,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-photo_ai}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-now}
     ports:
-      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
-      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "127.0.0.1:${MINIO_API_PORT:-19000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-19001}:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -152,6 +200,44 @@ services:
     restart: unless-stopped
     networks:
       - app_private
+      - app_edge
+
+  embedding:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile.embedding
+    profiles:
+      - ml
+    environment:
+      EMBEDDING_RUNTIME: ${EMBEDDING_RUNTIME:-transformers_clip}
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME:-wkcn/TinyCLIP-ViT-8M-16-Text-3M-YFCC15M}
+      EMBEDDING_MODEL_REVISION: ${EMBEDDING_MODEL_REVISION:-a2a8c6eaa2549ad66eb7c31b85022bf58273a26c}
+      EMBEDDING_MODEL_PATH: /models/embedding
+      HF_HUB_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
+      HF_HUB_DISABLE_PROGRESS_BARS: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      DO_NOT_TRACK: "1"
+    ports:
+      - "127.0.0.1:${EMBEDDING_PORT:-8001}:8001"
+    volumes:
+      - ${EMBEDDING_MODEL_HOST_PATH:-./models/tinyclip}:/models/embedding:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health/model?load=true', timeout=180)"
+        ]
+      interval: 30s
+      timeout: 180s
+      retries: 12
+      start_period: 180s
+    restart: unless-stopped
+    networks:
+      - app_private
 
   llama:
     image: ${LLAMA_CPP_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-b9445}
@@ -159,25 +245,41 @@ services:
       - vlm
     command:
       - -m
-      - /models/${QWEN_MODEL_FILE:-qwen2.5-vl-3b-instruct-q4_k_m.gguf}
+      - /models/${VLM_MODEL_FILE:-SmolVLM-500M-Instruct-Q8_0.gguf}
       - --mmproj
-      - /models/${QWEN_MMPROJ_FILE:-mmproj-qwen2.5-vl-3b-instruct-f16.gguf}
+      - /models/${VLM_MMPROJ_FILE:-mmproj-SmolVLM-500M-Instruct-Q8_0.gguf}
       - --alias
-      - qwen-vl
+      - ${VLM_MODEL_ALIAS:-smolvlm-500m}
       - --host
       - 0.0.0.0
       - --port
       - "8080"
       - --ctx-size
-      - "8192"
+      - ${VLM_CONTEXT_SIZE:-4096}
+      - --parallel
+      - ${VLM_PARALLEL:-1}
+      - --cache-ram
+      - ${VLM_CACHE_RAM_MB:-0}
+      - --image-max-tokens
+      - ${VLM_IMAGE_MAX_TOKENS:-384}
+      - --image-min-tokens
+      - ${VLM_IMAGE_MIN_TOKENS:-384}
       - --jinja
     volumes:
-      - ./models/qwen-vl:/models:ro
+      - ${VLM_MODEL_HOST_PATH:-./models/smolvlm}:/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 40
+      start_period: 600s
     restart: unless-stopped
     networks:
       - app_private
 
 networks:
+  app_edge:
+    driver: bridge
   app_private:
     driver: bridge
     internal: true

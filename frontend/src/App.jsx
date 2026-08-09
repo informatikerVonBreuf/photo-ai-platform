@@ -1,18 +1,19 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
-import DashboardLayout from "./pages/DashboardLayout";
-import LoginPage from "./pages/LoginPage";
+import { lazy, Suspense } from "react";
 
-import LibrariesPage from "./pages/LibrariesPage";
-import TextSearchPage from "./pages/TextSearchPage";
-import ImageSearchPage from "./pages/ImageSearchPage";
-import FiltersPage from "./pages/FiltersPage";
-import ClusteringPage from "./pages/ClusteringPage";
-import AssistantPage from "./pages/AssistantPage";
-import BackgroundScene from "./components/BackgroundScene";
 import "./styles/dropdown.css";
 
 import "./App.css";
+
+const DashboardLayout = lazy(() => import("./pages/DashboardLayout"));
+const BackgroundScene = lazy(() => import("./components/BackgroundScene"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const LibrariesPage = lazy(() => import("./pages/LibrariesPage"));
+const TextSearchPage = lazy(() => import("./pages/TextSearchPage"));
+const ImageSearchPage = lazy(() => import("./pages/ImageSearchPage"));
+const FiltersPage = lazy(() => import("./pages/FiltersPage"));
+const ClusteringPage = lazy(() => import("./pages/ClusteringPage"));
+const AssistantPage = lazy(() => import("./pages/AssistantPage"));
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem("mpx_token");
@@ -20,18 +21,20 @@ function RequireAuth({ children }) {
   return children;
 }
 
-const BG_MODELS = [
-  { value: "none", label: "Aucun objet" },
-];
-
-const DEFAULT_BG_MODEL = "none";
-
 export default function App() {
-  const [bgModel, setBgModel] = useState(DEFAULT_BG_MODEL);
   return (
     <div className="app-root">
-      <BackgroundScene modelPath={bgModel === "none" ? null : bgModel} />
+      <Suspense fallback={null}>
+        <BackgroundScene />
+      </Suspense>
       <div className="app-content">
+    <Suspense
+      fallback={
+        <div className="routeLoader" role="status" aria-label="Chargement">
+          <span className="btnSpinner" />
+        </div>
+      }
+    >
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
@@ -40,7 +43,7 @@ export default function App() {
         path="/app"
         element={
           <RequireAuth>
-            <DashboardLayout bgModel={bgModel} onChangeBgModel={setBgModel} bgModelOptions={BG_MODELS} />
+            <DashboardLayout />
           </RequireAuth>
         }
       >
@@ -55,6 +58,7 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </Suspense>
     </div>
     </div>
   );

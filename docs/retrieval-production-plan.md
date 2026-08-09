@@ -114,8 +114,9 @@ Use a hybrid strategy with separate channels and late fusion:
    OpenCLIP/SigLIP text embedding searched against caption embeddings.
 5. Fusion:
    RRF first because it is robust across score scales.
-6. Optional rerank:
-   local reranker or local LLM only on top-N, never as the first recall layer.
+6. Optional verification:
+   local VLM over all RRF survivors in bounded batches, never as the first
+   recall layer.
 
 Production default:
 
@@ -127,7 +128,7 @@ metadata filters
 + RRF
 + constraint-aware rerank for dense prompts
 + hard negative filter for explicit "no/without/sans" clauses
-+ optional top-N rerank
++ optional local VLM verification with variable output size
 ```
 
 Keep weighted linear fusion as an experiment, but prefer RRF for the first

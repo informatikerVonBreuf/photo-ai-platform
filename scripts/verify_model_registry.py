@@ -55,14 +55,22 @@ def validate_registry(data: dict[str, Any], strict: bool) -> list[str]:
                 errors.append(f"{model_id}: approved model has no local artifacts")
 
         for artifact in artifacts:
+            if not isinstance(artifact, dict):
+                errors.append(f"{model_id}: artifact must be an object")
+                continue
             relative_path = Path(str(artifact.get("path", "")))
             expected_hash = str(artifact.get("sha256", "")).lower()
-            if relative_path.is_absolute() or ".." in relative_path.parts:
+            if (
+                not str(relative_path)
+                or relative_path.is_absolute()
+                or ".." in relative_path.parts
+            ):
                 errors.append(f"{model_id}: artifact path must stay inside the repository")
                 continue
             artifact_path = ROOT / relative_path
             if not artifact_path.is_file():
-                errors.append(f"{model_id}: missing artifact {relative_path}")
+                if approved:
+                    errors.append(f"{model_id}: missing artifact {relative_path}")
                 continue
             if len(expected_hash) != 64:
                 errors.append(f"{model_id}: invalid SHA-256 for {relative_path}")

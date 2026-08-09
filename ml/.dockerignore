@@ -1,0 +1,7 @@
+*
+!Dockerfile.embedding
+!requirements-service.txt
+!services/
+!services/**
+!wheels/
+!wheels/**

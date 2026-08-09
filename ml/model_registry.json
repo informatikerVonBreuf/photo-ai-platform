@@ -10,6 +10,39 @@
   },
   "models": [
     {
+      "id": "tinyclip-vit-8m-text-3m-yfcc15m",
+      "role": "retrieval",
+      "runtime": "transformers",
+      "source": "wkcn/TinyCLIP-ViT-8M-16-Text-3M-YFCC15M",
+      "revision": "a2a8c6eaa2549ad66eb7c31b85022bf58273a26c",
+      "license": "mit",
+      "status": "candidate",
+      "approved_for_production": false,
+      "artifacts": [
+        {
+          "path": "models/tinyclip/config.json",
+          "sha256": "c586d856dbd5589b67525db9e791ee0917402405672c7773aead373efb7d7bca"
+        },
+        {
+          "path": "models/tinyclip/model.safetensors",
+          "sha256": "9339ee3d736344d0ddcaa6c03edc9f89688f08caaea5401220885233da726fcc"
+        },
+        {
+          "path": "models/tinyclip/preprocessor_config.json",
+          "sha256": "910e70b3956ac9879ebc90b22fb3bc8a75b6a0677814500101a4c072bd7857bd"
+        },
+        {
+          "path": "models/tinyclip/tokenizer.json",
+          "sha256": "b556ac8c99757ffb677208af34bc8c6721572114111a6e0aaf5fa69ff0b8d842"
+        }
+      ],
+      "notes": [
+        "Lightweight local candidate: 23.4M parameters and 93.8 MB of weights.",
+        "Must pass the project retrieval benchmark before production approval.",
+        "Every Qdrant collection must be regenerated when changing embedding models."
+      ]
+    },
+    {
       "id": "openclip-vit-l-14-openai",
       "role": "retrieval",
       "runtime": "open_clip",
@@ -22,6 +55,22 @@
       "notes": [
         "Used by the current benchmark.",
         "Resolve the QuickGELU configuration and regenerate every embedding before approval."
+      ]
+    },
+    {
+      "id": "siglip2-base-patch16-224",
+      "role": "retrieval",
+      "runtime": "transformers",
+      "source": "google/siglip2-base-patch16-224",
+      "revision": null,
+      "license": "apache-2.0",
+      "status": "research",
+      "approved_for_production": false,
+      "artifacts": [],
+      "notes": [
+        "Preferred next retrieval challenger after the TinyCLIP baseline.",
+        "The model card reports about 1.5 GB of weights and an Apache-2.0 license.",
+        "Freeze a revision, provision locally, and rebuild the Qdrant collection before testing."
       ]
     },
     {
@@ -70,19 +119,104 @@
       ]
     },
     {
+      "id": "smolvlm-500m-instruct-gguf",
+      "role": "vlm_judge",
+      "runtime": "llama.cpp",
+      "source": "ggml-org/SmolVLM-500M-Instruct-GGUF",
+      "revision": "72e986006ef53e37cdd3f6d4241c90b0f01df376",
+      "license": "apache-2.0",
+      "status": "candidate_cpu",
+      "approved_for_production": false,
+      "artifacts": [
+        {
+          "path": "models/smolvlm/SmolVLM-500M-Instruct-Q8_0.gguf",
+          "sha256": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4"
+        },
+        {
+          "path": "models/smolvlm/mmproj-SmolVLM-500M-Instruct-Q8_0.gguf",
+          "sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150"
+        }
+      ],
+      "notes": [
+        "Selected CPU challenger from the official ggml-org conversion under Apache-2.0.",
+        "The Q8 model is about 437 MB and the Q8 projector about 109 MB.",
+        "On Ryzen 5 7520U / 8 GB, llama.cpp uses about 383 MiB idle and starts in about 60 to 78 seconds.",
+        "At 384 image tokens, one judgement takes about 9 seconds and a two-image request about 17 seconds.",
+        "The initial smoke set correctly accepted food on a table, rejected mug plus knife, handled a dense positive prompt, and rejected violated negation and spatial constraints.",
+        "Use as the default opt-in CPU judge, but keep approved_for_production false until the frozen human-labelled evaluation set passes."
+      ]
+    },
+    {
       "id": "qwen2.5-vl-3b-instruct-gguf",
       "role": "vlm_judge",
       "runtime": "llama.cpp",
-      "source": "Qwen/Qwen2.5-VL-3B-Instruct",
+      "source": "ggml-org/Qwen2.5-VL-3B-Instruct-GGUF",
+      "revision": "5037fcf163dd95d1e41d1974465f0898ed108ca2",
+      "license": "apache-2.0",
+      "status": "candidate_async_cpu",
+      "approved_for_production": false,
+      "artifacts": [
+        {
+          "path": "models/qwen-vl/Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf",
+          "sha256": "d02fe9b69ad8cadbbd228e387667af66612c44bed29ffc8eb1e7caf9ac486c12"
+        },
+        {
+          "path": "models/qwen-vl/mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf",
+          "sha256": "980c9b2f78c04e6cff93d277ada09e768394f112d75db3b4e9dea8a69f9fb904"
+        }
+      ],
+      "notes": [
+        "Apache-2.0 CPU candidate for local visual relevance review.",
+        "The Q4_K_M model is about 1.93 GB and the Q8 projector about 0.84 GB.",
+        "Pinned to the official ggml-org conversion and verified by SHA-256.",
+        "On Ryzen 5 7520U / 8 GB, llama.cpp startup varied from about 4 minutes 49 seconds to 6 minutes 6 seconds.",
+        "A one-image positive judgement was correct at confidence 0.95 but took about 185 seconds.",
+        "The hard negative showing only a mug and knife was correctly rejected at confidence 0.0 in about 188 seconds.",
+        "At 384 image tokens, two evidence-filtered candidates completed twice in about 150 seconds with stable verified output.",
+        "Do not enable exhaustive synchronous review on this CPU; benchmark async use, a GPU, or the Qwen3-VL 2B challenger."
+      ]
+    },
+    {
+      "id": "qwen3-vl-2b-instruct-gguf",
+      "role": "vlm_judge",
+      "runtime": "llama.cpp",
+      "source": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
       "revision": null,
-      "license": "verify_before_production",
-      "status": "proposed",
+      "license": "apache-2.0",
+      "status": "research",
       "approved_for_production": false,
       "artifacts": [],
       "notes": [
-        "Candidate for singleton review and cluster labelling.",
+        "Preferred next lightweight VLM challenger after the Qwen2.5-VL 3B baseline.",
+        "An official GGUF conversion supports llama.cpp and Q4_K_M.",
+        "Freeze a revision and checksums only when the benchmark slot is scheduled."
+      ]
+    },
+    {
+      "id": "qwen2.5-vl-7b-instruct-gguf",
+      "role": "vlm_judge",
+      "runtime": "llama.cpp",
+      "source": "ggml-org/Qwen2.5-VL-7B-Instruct-GGUF",
+      "revision": "508edd0afaa66bb9e9f40587acc2184f02daf1f6",
+      "license": "apache-2.0",
+      "status": "benchmark_failed_cpu",
+      "approved_for_production": false,
+      "artifacts": [
+        {
+          "path": "models/qwen-vl/Qwen2.5-VL-7B-Instruct-Q4_K_M.gguf",
+          "sha256": "9258bf05b12686d097ff3b6b18d968ab393649780aa2b3cd67fec43d50554392"
+        },
+        {
+          "path": "models/qwen-vl/mmproj-Qwen2.5-VL-7B-Instruct-Q8_0.gguf",
+          "sha256": "2ddb555391bae966e412deab9e07b58afa18bcc06930ba0f1c78a3695ab9e506"
+        }
+      ],
+      "notes": [
+        "Apache-2.0 candidate for strict image relevance review after RRF.",
         "Use local GGUF weights and a local multimodal projector.",
-        "Keep this model outside the synchronous search request path on CPU."
+        "The Q4_K_M model is about 4.68 GB and the Q8 projector about 853 MB.",
+        "On Ryzen 5 7520U / 8 GB, startup took about 25 minutes and a live judge request timed out after 180 seconds.",
+        "Keep for a future GPU benchmark; do not use on the current CPU production path."
       ]
     }
   ]

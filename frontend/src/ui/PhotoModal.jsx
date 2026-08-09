@@ -130,27 +130,31 @@ export default function PhotoModal({ isOpen, onClose, photo, onDelete }) {
           <button className="btn" onClick={handleDownload}>
             Télécharger
           </button>
-          <button 
-            className="btn btnDanger"
-            onClick={handleDeleteClick}
-          >
-            Supprimer
-          </button>
+          {onDelete && (
+            <button
+              className="btn btnDanger"
+              onClick={handleDeleteClick}
+            >
+              Supprimer
+            </button>
+          )}
         </div>
       </div>
     </Modal>
 
       {/* Dialog de confirmation de suppression */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        title="Supprimer la photo"
-        message={`Êtes-vous sûr de vouloir supprimer "${photo.name || 'cette photo'}" ? Cette action est irréversible.`}
-        confirmText="Supprimer"
-        cancelText="Annuler"
-        danger={true}
-      />
+      {onDelete && (
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          title="Supprimer la photo"
+          message={`Êtes-vous sûr de vouloir supprimer "${photo.name || 'cette photo'}" ? Cette action est irréversible.`}
+          confirmText="Supprimer"
+          cancelText="Annuler"
+          danger={true}
+        />
+      )}
     </>
   );
 }

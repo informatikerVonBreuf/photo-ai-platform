@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
 import EmptyState from "../ui/EmptyState";
 import SkeletonCard from "../ui/SkeletonCard";
+import StatusBadge from "./StatusBadge";
+import { Check } from "@phosphor-icons/react";
 
 export default function LibraryImageGrid({
   images = [],
   pageSize = 36,
   loading = false,
   onOpen,
+  onToggleSelection,
+  selectedIds = [],
   resetKey,
 }) {
   const [pagination, setPagination] = useState({ resetKey, page: 1 });
@@ -45,17 +49,42 @@ export default function LibraryImageGrid({
           const src = img.url;
           const alt = img.name || img.caption || "Image";
           const photoForModal = src ? { ...img, url: src } : img;
+          const imageId = String(img.id || img.url);
+          const isSelected = selectedIds.includes(imageId);
 
           return (
             <div
-              className="tile"
-              key={img.id || img.url}
+              className={`tile ${isSelected ? "tile--selected" : ""}`}
+              key={imageId}
               role={onOpen ? "button" : undefined}
               tabIndex={onOpen ? 0 : undefined}
               onClick={() => onOpen?.(photoForModal)}
             >
               <div className="tileImg">
                 {src ? <img src={src} alt={alt} /> : null}
+                {onToggleSelection ? (
+                  <button
+                    type="button"
+                    className={`tileSelect ${isSelected ? "tileSelect--active" : ""}`}
+                    aria-label={
+                      isSelected
+                        ? `Retirer ${alt} de la selection`
+                        : `Selectionner ${alt}`
+                    }
+                    aria-pressed={isSelected}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggleSelection(imageId);
+                    }}
+                  >
+                    {isSelected ? <Check size={16} weight="bold" /> : null}
+                  </button>
+                ) : null}
+                {img.status && img.status !== "INDEXED" ? (
+                  <div className="tileStatus">
+                    <StatusBadge status={img.status} />
+                  </div>
+                ) : null}
               </div>
             </div>
           );
